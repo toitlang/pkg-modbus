@@ -105,6 +105,14 @@ class Client:
           logger_.warn "unpaired response"
     finally:
       close
+  
+  /**
+  Utility function to fetch a REAL/FLOAT from holding registers
+  */
+  read_float start_address/int -> float:
+    registers := this.read_holding_registers start_address 2
+    return float.from_bits32(registers[0] << 16 | registers[1])
+  
 
 monitor Sessions_:
   sessions_ ::= {:}
