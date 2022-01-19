@@ -3,5 +3,6 @@
 // found in the LICENSE file.
 
 import .client
+import .sugared
 
 export *

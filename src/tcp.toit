@@ -22,18 +22,19 @@ class TcpTransport implements Transport:
     writer_ = writer.Writer socket_
 
   write frame/Frame:
+    socket_.set_no_delay false
     framer.write frame writer_
+    socket_.set_no_delay true
 
   read -> Frame?:
-    while true:
-      frame := framer.read reader_
-      return frame
+    return framer.read reader_
 
   close:
     socket_.close
 
 class TcpFramer implements Framer:
-  read reader/reader.BufferedReader -> Frame:
+  read reader/reader.BufferedReader -> Frame?:
+    if not reader.can_ensure 8: return null
     header := reader.read_bytes 8
     identifier := binary.BIG_ENDIAN.uint16 header 0
     length := binary.BIG_ENDIAN.uint16 header 4

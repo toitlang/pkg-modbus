@@ -8,14 +8,22 @@ import modbus
 main:
   net := net.open
   socket := net.tcp_connect "localhost" 5502
-
   client := modbus.Client.tcp socket --server_address=1
 
-  client.write_holding_registers 101 [42]
-  client.write_holding_registers 102 [2]
-  client.write_holding_registers 103 [44]
-
+  str := "1234 Hello æøå"
+  client.sugar.write_string 300 str
   print
-    client.read_holding_registers 101 3
+    client.sugar.read_string 300 str.size
+
+  float32 := 42.125
+  client.sugar.write_float32 300 float32
+  print
+    client.sugar.read_float32 300
+
+  uint32 := 42
+  client.sugar.write_uint32 300 uint32
+  print
+    client.sugar.read_uint32 300
+
 
   client.close

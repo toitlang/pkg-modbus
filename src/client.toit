@@ -10,6 +10,7 @@ import .tcp
 import .transport
 import .framer
 import .protocol
+import .sugared
 
 CLOSED_ERROR ::= "TRANSPORT_CLOSED"
 SESSION_CLOSED_ERROR ::= "SESSION_CLOSED_ERROR"
@@ -27,6 +28,7 @@ class Client:
   closed_ := false
   run_task_ := null
   next_identifier_ := 0
+  sugared_/SugaredClient? := null
 
   constructor .transport_
       --auto_run=true
@@ -36,8 +38,8 @@ class Client:
     // Run the client task, processing incoming data.
     if auto_run:
       run_task_ = task --background::
-        e := catch --trace: run
-        if e and e != CLOSED_ERROR:
+        e := catch: run
+        if not closed_ and e and e != CLOSED_ERROR:
           logger_.error "error processing transport" --tags={"error": e}
         run_task_ = null
 
@@ -52,6 +54,13 @@ class Client:
       TcpTransport socket --framer=framer
       --auto_run=auto_run
       --server_address=server_address
+
+  /**
+  Returns a sugared client for working with alternative types on the client.
+  */
+  sugar -> SugaredClient:
+    if not sugared_: sugared_ = SugaredClient this
+    return sugared_
 
   // Close the client. It's okay to call close multiple times.
   close:

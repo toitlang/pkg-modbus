@@ -153,11 +153,14 @@ func (eh *exampleHandler) HandleDiscreteInputs(req *modbus.DiscreteInputsRequest
 	return
 }
 
+var (
+	customRegisters = make([]uint16, 100)
+)
+
 // Holding register handler method.
 // This method gets called whenever a valid modbus request asking for a holding register
 // operation (either read or write) received by the server.
 func (eh *exampleHandler) HandleHoldingRegisters(req *modbus.HoldingRegistersRequest) (res []uint16, err error) {
-	fmt.Println(req)
 	var regAddr uint16
 
 	if req.UnitId != 1 {
@@ -177,7 +180,13 @@ func (eh *exampleHandler) HandleHoldingRegisters(req *modbus.HoldingRegistersReq
 		// compute the target register address
 		regAddr = req.Addr + uint16(i)
 
-		fmt.Println(regAddr)
+		if regAddr >= 300 && regAddr < 400 {
+			if req.IsWrite {
+				customRegisters[regAddr-300] = req.Args[i]
+			}
+			res = append(res, customRegisters[regAddr-300])
+			continue
+		}
 
 		switch regAddr {
 		// expose the static, read-only value of 0xff00 in register 100
@@ -187,7 +196,6 @@ func (eh *exampleHandler) HandleHoldingRegisters(req *modbus.HoldingRegistersReq
 		// expose holdingReg1 in register 101 (RW)
 		case 101:
 			if req.IsWrite {
-				fmt.Println(req.Args)
 				eh.holdingReg1 = req.Args[i]
 			}
 			res = append(res, eh.holdingReg1)

@@ -13,7 +13,5 @@ class Frame:
   constructor .identifier .address .function_code .data:
 
 interface Framer:
-  //new_frame address/int data/ByteArray -> Frame
-  read reader/reader.BufferedReader -> Frame
-
+  read reader/reader.BufferedReader -> Frame?
   write frame/Frame writer
