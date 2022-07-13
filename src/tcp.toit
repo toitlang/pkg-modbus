@@ -33,9 +33,11 @@ class TcpTransport implements Transport:
     socket_.close
 
 class TcpFramer implements Framer:
+  static HEADER_SIZE_ ::= 8
+
   read reader/reader.BufferedReader -> Frame?:
-    if not reader.can_ensure 8: return null
-    header := reader.read_bytes 8
+    if not reader.can_ensure HEADER_SIZE_: return null
+    header := reader.read_bytes HEADER_SIZE_
     identifier := binary.BIG_ENDIAN.uint16 header 0
     length := binary.BIG_ENDIAN.uint16 header 4
     address := binary.BIG_ENDIAN.uint8 header 6
@@ -44,10 +46,10 @@ class TcpFramer implements Framer:
     return Frame identifier address function_code data
 
   write frame/Frame writer:
-    header := ByteArray 8
-    binary.BIG_ENDIAN.put_uint16 header 0 frame.identifier
-    binary.BIG_ENDIAN.put_uint16 header 4 frame.data.size + 2
-    binary.BIG_ENDIAN.put_uint8 header 6 frame.address
-    binary.BIG_ENDIAN.put_uint8 header 7 frame.function_code
-    writer.write header
-    writer.write frame.data
+    bytes := ByteArray HEADER_SIZE_ + frame.data.size
+    binary.BIG_ENDIAN.put_uint16 bytes 0 frame.identifier
+    binary.BIG_ENDIAN.put_uint16 bytes 4 frame.data.size + 2
+    binary.BIG_ENDIAN.put_uint8 bytes 6 frame.address
+    binary.BIG_ENDIAN.put_uint8 bytes 7 frame.function_code
+    bytes.replace HEADER_SIZE_ frame.data
+    writer.write bytes
