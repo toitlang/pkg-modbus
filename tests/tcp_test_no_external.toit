@@ -8,6 +8,7 @@ import modbus
 import net
 
 import .test_server
+import .common as common
 
 main args:
   server_logger := (log.default.with_level log.INFO_LEVEL).with_name "server"
@@ -18,15 +19,9 @@ test port/int:
   net := net.open
   socket := net.tcp_connect "localhost" port
 
-  client := modbus.Client.tcp socket
+  bus := modbus.Modbus.tcp socket
 
-  client.write_holding_registers 50 [42]
-  client.write_holding_registers 51 [2]
-  client.write_holding_registers 52 [44]
+  station := bus.station modbus.Station.IGNORED_UNIT_ID
+  common.test station
 
-  data := client.read_holding_registers --unit_id=1 50 3
-  expect_equals [42, 2, 44] data
-
-  expect_throw "Illegal Data Address": client.write_holding_registers --unit_id=2 101 [1]
-
-  client.close
+  bus.close

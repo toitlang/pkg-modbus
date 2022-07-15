@@ -95,31 +95,36 @@ def run_server(kind):
     #     store = ModbusSlaveContext(..., zero_mode=True)
     # ----------------------------------------------------------------------- #
 
-    if kind == "tcp":
-        store = ModbusSlaveContext(
-            di=ModbusSequentialDataBlock(0, [17] * 100),
-            co=ModbusSequentialDataBlock(0, [17] * 100),
-            hr=ModbusSequentialDataBlock(0, [17] * 100),
-            ir=ModbusSequentialDataBlock(0, [17] * 100),
-        )
+    block1 = ModbusSequentialDataBlock(0, list(range(100)))
+    block2_data = list(range(100))
+    pos = 0
+    for x in range(0, 10):
+        val = 100 + x
+        for y in range(0, 8):
+            block2_data[pos] = (val & 1)
+            pos += 1
+            val >>= 1
+    block2 = ModbusSequentialDataBlock(0, block2_data)
 
+    store = ModbusSlaveContext(
+        di=block2,
+        co=block1,
+        hr=block1,
+        ir=block2,
+        zero_mode=True
+    )
+    if kind == "tcp":
         context = ModbusServerContext(slaves=store, single=True)
     else:
-        store1 = ModbusSlaveContext(
-            di=ModbusSequentialDataBlock(0, [18] * 100),
-            co=ModbusSequentialDataBlock(0, [18] * 100),
-            hr=ModbusSequentialDataBlock(0, [18] * 100),
-            ir=ModbusSequentialDataBlock(0, [18] * 100),
-        )
-        block = [19]*100
         store2 = ModbusSlaveContext(
-            di=ModbusSequentialDataBlock(0, block),
-            co=ModbusSequentialDataBlock(0, block),
-            hr=ModbusSequentialDataBlock(0, block),
-            ir=ModbusSequentialDataBlock(0, block),
+            di=ModbusSequentialDataBlock(0, list(range(100))),
+            co=ModbusSequentialDataBlock(0, list(range(100))),
+            hr=ModbusSequentialDataBlock(0, list(range(100))),
+            ir=ModbusSequentialDataBlock(0, list(range(100))),
+            zero_mode=True,
         )
         servers = {
-            0x01: store1,
+            0x01: store,
             0x02: store2,
         }
 
@@ -132,12 +137,12 @@ def run_server(kind):
     # ----------------------------------------------------------------------- #
     identity = ModbusDeviceIdentification(
         info_name={
-            "VendorName": "Pymodbus",
-            "ProductCode": "PM",
-            "VendorUrl": "http://github.com/riptideio/pymodbus/",
-            "ProductName": "Pymodbus Server",
-            "ModelName": "Pymodbus Server",
-            "MajorMinorRevision": version.short(),
+            "VendorName": "Toit Test Server",
+            #"ProductCode": "PM",
+            #"VendorUrl": "http://github.com/riptideio/pymodbus/",
+            #"ProductName": "Pymodbus Server",
+            #"ModelName": "Pymodbus Server",
+            #"MajorMinorRevision": version.short(),
         }
     )
 
