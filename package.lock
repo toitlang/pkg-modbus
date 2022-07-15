@@ -1,0 +1,5 @@
+prefixes:
+  rs485: toit-rs485
+packages:
+  toit-rs485:
+    path: ../toit-rs485

@@ -1,0 +1,3 @@
+dependencies:
+  rs485:
+    path: ../toit-rs485

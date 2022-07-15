@@ -21,6 +21,8 @@ class TcpTransport implements Transport:
     reader_ = reader.BufferedReader socket_
     writer_ = writer.Writer socket_
 
+  supports_parallel_sessions -> bool: return true
+
   write frame/Frame:
     socket_.set_no_delay false
     framer.write frame writer_
@@ -31,6 +33,7 @@ class TcpTransport implements Transport:
 
   close:
     socket_.close
+
 
 class TcpFramer implements Framer:
   static HEADER_SIZE_ ::= 8

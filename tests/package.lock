@@ -1,0 +1,9 @@
+prefixes:
+  modbus: ..
+packages:
+  ..:
+    path: ..
+    prefixes:
+      rs485: toit-rs485
+  toit-rs485:
+    path: ../../toit-rs485
