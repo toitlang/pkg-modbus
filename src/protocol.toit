@@ -6,10 +6,12 @@ import binary
 
 import .framer
 
-class Request:
+abstract class Request:
   function_code/int
 
   constructor .function_code:
+
+  abstract to_byte_array -> ByteArray
 
 class Response:
   static check_frame function_code/int frame/Frame:
