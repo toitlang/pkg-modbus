@@ -7,8 +7,10 @@ import log
 import modbus
 import modbus.rs485 as modbus
 import modbus.tcp as modbus
+import modbus.exception as modbus
 import net
 
+import .common as common
 import .test_server
 
 main args:
@@ -22,17 +24,13 @@ test port/int:
   socket := net.tcp_connect "localhost" port
 
   transport := modbus.TcpTransport socket --framer=(modbus.RtuFramer --baud_rate=9600)
-  client := modbus.Client transport
+  bus := modbus.Modbus transport
 
-  client.write_holding_registers --unit_id=1 50 [42]
-  client.write_holding_registers --unit_id=1 51 [2]
-  client.write_holding_registers --unit_id=1 52 [44]
+  station := bus.station 1
+  common.test station --is_serial
 
-  data := client.read_holding_registers --unit_id=1 50 3
-  expect_equals [42, 2, 44] data
+  bad_station := bus.station 3
+  expect_throw DEADLINE_EXCEEDED_ERROR:
+    bad_station.holding_registers.write_many --address=101 [1]
 
-  expect_throw "Illegal Data Address": client.write_holding_registers --unit_id=2 101 [1]
-  // TODO(florian): enable this test again.
-  //    Requires a timeout on tcp connections when reading a response.
-  // expect_throw "Illegal Data Address": client.write_holding_registers --unit_id=3 101 [1]
-  client.close
+  bus.close
