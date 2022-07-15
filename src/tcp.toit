@@ -46,6 +46,9 @@ class TcpFramer implements Framer:
     return Frame identifier address function_code data
 
   write frame/Frame writer:
+    // It is important to send the data in one go.
+    // Modbus TCP should allow fragmented packets, but many devices do not.
+    // By sending the data in one go, we minimize the risk of fragmentation.
     bytes := ByteArray HEADER_SIZE_ + frame.data.size
     binary.BIG_ENDIAN.put_uint16 bytes 0 frame.identifier
     binary.BIG_ENDIAN.put_uint16 bytes 4 frame.data.size + 2
