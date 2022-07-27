@@ -50,9 +50,9 @@ class Client:
       --max_concurrent_transactions/int?=null
       --auto_run=true:
     return Client
-      TcpTransport socket --framer=framer
-      --auto_run=auto_run
-      --max_concurrent_transactions=max_concurrent_transactions
+        TcpTransport socket --framer=framer
+        --auto_run=auto_run
+        --max_concurrent_transactions=max_concurrent_transactions
 
   /**
   Returns a sugared client for working with alternative types on the client.
