@@ -4,7 +4,7 @@ A Modbus Toit client.
 
 This package supports Modbus TCP and Modbus RTU.
 
-Not all functionality of modbus is supported yet. Please file feature request if you need
+Not all functionality of Modbus is supported yet. Please file feature request if you need
 extra functions.
 
 # Resources
