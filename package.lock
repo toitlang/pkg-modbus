@@ -1,10 +1,6 @@
 prefixes:
-  modbus: ..
+  rs485: toit-rs485
 packages:
-  ..:
-    path: ..
-    prefixes:
-      rs485: toit-rs485
   toit-rs485:
     url: github.com/toitware/toit-rs485
     version: 1.0.0

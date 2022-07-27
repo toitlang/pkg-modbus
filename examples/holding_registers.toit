@@ -9,13 +9,13 @@ main:
   net := net.open
   socket := net.tcp_connect "localhost" 5502
 
-  client := modbus.Client.tcp socket --server_address=1
+  client := modbus.Client.tcp socket
 
-  client.write_holding_registers 101 [42]
-  client.write_holding_registers 102 [2]
-  client.write_holding_registers 103 [44]
+  client.write_holding_registers --unit_id=1 101 [42]
+  client.write_holding_registers --unit_id=1 102 [2]
+  client.write_holding_registers --unit_id=1 103 [44]
 
   print
-    client.read_holding_registers 101 3
+    client.read_holding_registers --unit_id=1 101 3
 
   client.close

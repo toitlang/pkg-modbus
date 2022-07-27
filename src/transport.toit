@@ -13,7 +13,9 @@ class Response:
 
 
 interface Transport:
-  write frame/Frame
+  supports_parallel_sessions -> bool
+
+  write frame/Frame -> none
   read -> Frame?
 
-  close
+  close -> none
