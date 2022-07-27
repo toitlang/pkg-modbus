@@ -6,4 +6,6 @@ packages:
     prefixes:
       rs485: toit-rs485
   toit-rs485:
-    path: ../../toit-rs485
+    url: github.com/toitware/toit-rs485
+    version: 1.0.0
+    hash: 2e8d0ae08c97a5dcba69b4e438408ef374c2c63f
