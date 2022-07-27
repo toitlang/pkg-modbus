@@ -63,9 +63,9 @@ class Modbus:
       --max_concurrent_transactions/int?=null
       --auto_run=true:
     return Modbus
-      TcpTransport socket --framer=framer
-      --auto_run=auto_run
-      --max_concurrent_transactions=max_concurrent_transactions
+        TcpTransport socket --framer=framer
+        --auto_run=auto_run
+        --max_concurrent_transactions=max_concurrent_transactions
 
   /**
   Variant of $Modbus.constructor.
