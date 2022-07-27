@@ -50,9 +50,9 @@ class Client:
       --max_concurrent_transactions/int?=null
       --auto_run=true:
     return Client
-      TcpTransport socket --framer=framer
-      --auto_run=auto_run
-      --max_concurrent_transactions=max_concurrent_transactions
+        TcpTransport socket --framer=framer
+        --auto_run=auto_run
+        --max_concurrent_transactions=max_concurrent_transactions
 
   /**
   Returns a sugared client for working with alternative types on the client.
@@ -127,7 +127,7 @@ A transaction manager.
 
 Depending on the underlying transport and framing a different number of transactions are allowed to
   the server.
-The transpaction manager keeps track of started transactions and assigns received responses to the
+The transaction manager keeps track of started transactions and assigns received responses to the
   correct transaction.
 */
 class TransactionManager_:
