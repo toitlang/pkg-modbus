@@ -23,7 +23,7 @@ start_server mode/string:
       pipe.PIPE_INHERITED  // stdin.
       pipe.PIPE_CREATED  // stdout.
       pipe.PIPE_CREATED  // stderr.
-      "python"  // Program.
+      "python"  // program.
       args
   return [
     int.parse port,
@@ -72,7 +72,7 @@ with_test_server --logger/log.Logger --mode/string [block]:
     if socket:
       socket.close
       break
-    sleep --ms=(50*i)
+    sleep --ms=(50 * i)
 
   try:
     block.call port

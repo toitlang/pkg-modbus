@@ -153,7 +153,7 @@ def run_server(kind):
     # ----------------------------------------------------------------------- #
     # Tcp:
     if kind == "tcp":
-        # Hack. Just fetch the port form the args.
+        # Hack. Just fetch the port from the args.
         port = int(sys.argv[2])
         StartTcpServer(context, identity=identity, address=("127.0.0.1", port), allow_reuse_address=True)
 
