@@ -7,8 +7,9 @@ import log
 import reader
 import writer
 import rs485
-import .transport
+import .exception
 import .framer
+import .transport
 
 /**
 An RS-485 based transport.
@@ -20,14 +21,10 @@ class Rs485Transport implements Transport:
   reader_/reader.BufferedReader
   writer_/writer.Writer
 
-  response_timeout_/Duration
-
   constructor .rs485_
-      --.framer=(RtuFramer --baud_rate=rs485_.baud_rate)
-      --response_timeout/Duration=(Duration --s=1):
+      --.framer=(RtuFramer --baud_rate=rs485_.baud_rate):
     reader_ = reader.BufferedReader rs485_
     writer_ = writer.Writer rs485_
-    response_timeout_ = response_timeout
 
   supports_parallel_sessions -> bool: return false
 
@@ -36,9 +33,7 @@ class Rs485Transport implements Transport:
       framer.write frame writer_
 
   read -> Frame?:
-    with_timeout --ms=response_timeout_.in_ms:
-      return framer.read reader_
-    unreachable
+    return framer.read reader_
 
   close:
     // TODO(florian): should we close the transceiver even though we didn't create it?
@@ -64,7 +59,7 @@ class RtuFramer implements Framer:
       // 3.5 * (8 + 3) = 38.5
       // For simplicity we round up to 40.
       inter_frame_delay_us = 40 * 1_000_000 / baud_rate
-      // According to the spec the receiver should drop frames that have 1.5char duration intervals between two
+      // According to the spec the receiver should drop frames that have 1.5 char duration intervals between two
       // characters.
       // In other words we can assume that a packet has been fully received when we have a timeout of 1.5chars on
       // reading the serial port.
@@ -96,14 +91,14 @@ class RtuFramer implements Framer:
     expected_crc := compute_crc_ data --to=(data.size - 2)
     given_crc := data[data.size - 1] << 8 | data[data.size - 2]
     if expected_crc != given_crc:
-      exception := InvalidFrameException
-          --transaction_identifier=Frame.NO_TRANSACTION_ID
-          --message="CRC mismatch"
+      exception := ModbusException.crc
+          --transaction_id=Frame.NO_TRANSACTION_ID
+          --message="CRC error"
           --frame_bytes=data
       throw exception
 
-    transmission_identifier := Frame.NO_TRANSACTION_ID  // RTU does not have transaction identifiers.
-    return Frame transmission_identifier unit_id function_code frame_data
+    transaction_id := Frame.NO_TRANSACTION_ID  // RTU does not have transaction identifiers.
+    return Frame --transaction_id=transaction_id --unit_id=unit_id --function_code=function_code --data=frame_data
 
   compute_crc_ data/ByteArray --to/int -> int:
     // Specification modbus over serial line, v1.02,
@@ -123,7 +118,7 @@ class RtuFramer implements Framer:
     // It is important to send all the data at once, since we must not have delays between characters.
     data := ByteArray (4 + frame.data.size)
     pos := 0
-    data[pos++] = frame.address
+    data[pos++] = frame.unit_id
     data[pos++] = frame.function_code
     data.replace pos frame.data
     pos += frame.data.size
