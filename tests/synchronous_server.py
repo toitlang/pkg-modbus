@@ -14,24 +14,17 @@ import logging
 import sys
 
 # from pymodbus.datastore import ModbusSparseDataBlock
-from pymodbus.datastore import (
-    ModbusSequentialDataBlock,
-    ModbusServerContext,
-    ModbusSlaveContext,
-)
-
+from pymodbus.datastore import (ModbusSequentialDataBlock, ModbusServerContext,
+                                ModbusSlaveContext)
+from pymodbus.device import ModbusDeviceIdentification
 # from pymodbus.server.sync import StartTlsServer
 # from pymodbus.server.sync import StartUdpServer
-from pymodbus.server.sync import StartSerialServer
-from pymodbus.device import ModbusDeviceIdentification
-from pymodbus.server.sync import StartTcpServer
-
+from pymodbus.server.sync import StartSerialServer, StartTcpServer
+from pymodbus.transaction import ModbusBinaryFramer, ModbusRtuFramer
 # --------------------------------------------------------------------------- #
 # import the various server implementations
 # --------------------------------------------------------------------------- #
 from pymodbus.version import version
-
-from pymodbus.transaction import ModbusRtuFramer, ModbusBinaryFramer
 
 # --------------------------------------------------------------------------- #
 # configure the service logging
@@ -148,19 +141,25 @@ def run_server(kind):
         }
     )
 
+    print("About to start server")
+    sys.stdout.flush()
     # ----------------------------------------------------------------------- #
     # run the server you want
     # ----------------------------------------------------------------------- #
     # Tcp:
     if kind == "tcp":
-        StartTcpServer(context, identity=identity, address=("", 5020))
+        # Hack. Just fetch the port from the args.
+        port = int(sys.argv[2])
+        StartTcpServer(context, identity=identity, address=("127.0.0.1", port), allow_reuse_address=True)
 
     #
     # TCP with different framer
 
     elif kind == "tcp_rtu":
+        port = int(sys.argv[2])
         StartTcpServer(context, identity=identity,
-                    framer=ModbusRtuFramer, address=("0.0.0.0", 5021))
+                    framer=ModbusRtuFramer,
+                    address=("127.0.0.1", port), allow_reuse_address=True)
 
     # TLS
     # StartTlsServer(context, identity=identity,
@@ -200,5 +199,5 @@ def run_server(kind):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2: raise "Missing argument"
+    if len(sys.argv) < 2: raise "Missing argument"
     run_server(sys.argv[1])
