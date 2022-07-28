@@ -92,7 +92,9 @@ class Modbus:
     transactions_.close
 
   /**
-  A station (aka station) is identified by the $unit_id. The "unit id" is also known as "station address" or
+  Creates a station object representing a device on the bus.
+
+  A station (aka server or slave) is identified by the $unit_id. The "unit id" is also known as "station address" or
     "server address". For Modbus TCP, it should almost always be equal to $Station.IGNORED_UNIT_ID (the default).
     For Modbus RTU or Modbus ASCII, it needs to be set to the id of the server.
 
