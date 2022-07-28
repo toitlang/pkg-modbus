@@ -293,12 +293,12 @@ class HoldingRegisters extends RegisterReader:
   /**
   Combines a write operation with a read operation.
 
-  Conceptually this operation is equivalent to doing a $write_many followed by a $read.
+  Conceptually this operation is equivalent to doing a $write_many followed by a $read_many.
 
   If the $read_register_count is equal to 0, and the $write_values list is empty, does nothing.
     In that case the server is not contacted.
   Otherwise, if the $read_register_count equals 0, a simple write-operations is performed as if $write_many was called.
-  Otherwise, if the $write_values is empty, a simple read-operations is performed as if $read was called.
+  Otherwise, if the $write_values is empty, a simple read-operations is performed as if $read_many was called.
   */
   write_read --read_address/int --read_register_count/int --write_address --write_values/List -> List:
     if not 0 <= read_address <= 0xFFFF: throw "OUT_OF_RANGE"
