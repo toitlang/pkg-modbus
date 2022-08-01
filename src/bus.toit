@@ -132,6 +132,22 @@ class Modbus:
     transactions_.run
 
 /**
+A signal synchronization primitive.
+
+This class is a partial copy of the 'Signal' class from the 'monitor' library. Older
+  versions of Toit don't have that class yet, and for backwards compatilibity we thus
+  copied it here.
+*/
+monitor Signal_:
+  /** Waits until the $condition is satisfied. */
+  wait [condition] -> none:
+    await: condition.call
+
+  /** Raises the signal, making waiters evaluate their condition. */
+  raise -> none:
+
+
+/**
 A transaction manager.
 
 Depending on the underlying transport and framing a different number of transactions are allowed to
@@ -145,7 +161,7 @@ class TransactionManager_:
   max_concurrent_transactions_/int?
 
   transactions_/Map ::= {:}
-  signal_/monitor.Signal ::= monitor.Signal
+  signal_/Signal_ ::= Signal_
 
   run_task_ := null
   next_id_ := 0
