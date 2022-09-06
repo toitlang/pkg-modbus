@@ -36,7 +36,7 @@ main:
   holding_registers.write_many --address=103 [44]
 
   print
-    holding_registers.read_many --address=101 --register_count=3
+      holding_registers.read_many --address=101 --register_count=3
 
   // See the TCP example for other modbus operations.
 

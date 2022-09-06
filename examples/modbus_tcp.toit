@@ -23,7 +23,7 @@ main:
   holding_registers.write_many --address=103 [44]
 
   print
-    holding_registers.read_many --address=101 --register_count=3
+      holding_registers.read_many --address=101 --register_count=3
 
 
   // Some convenience functions:
@@ -41,7 +41,7 @@ main:
   uint32 := 42
   holding_registers.write_uint32 --address=300 uint32
   print
-    holding_registers.read_uint32 --address=300
+      holding_registers.read_uint32 --address=300
 
 
   input_registers := station.input_registers
