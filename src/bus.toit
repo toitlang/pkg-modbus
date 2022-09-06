@@ -72,6 +72,19 @@ class Modbus:
   Convenience constructor for creating a new RTU Modbus Client.
   */
   constructor.rtu rs485_bus/rs485.Rs485
+      --framer/Framer=(RtuFramer --baud_rate=rs485_bus.baud_rate)
+      --auto_run=true:
+    return Modbus
+      Rs485Transport rs485_bus --framer=framer
+      --auto_run=auto_run
+
+  /**
+  Variant of $Modbus.constructor.
+  Convenience constructor for creating a new RTU Modbus Client.
+
+  Deprecated. Use the constructor without `--baud_rate` instead.
+  */
+  constructor.rtu rs485_bus/rs485.Rs485
       --baud_rate/int
       --framer/Framer=(RtuFramer --baud_rate=baud_rate)
       --auto_run=true:

@@ -2,10 +2,13 @@
 // Use of this source code is governed by a Zero-Clause BSD license that can
 // be found in the EXAMPLES_LICENSE file.
 
+import log
 import net
 import modbus
 
 main:
+  log.set_default (log.default.with_level log.INFO_LEVEL)
+
   net := net.open
   socket := net.tcp_connect "localhost" 5502
 
