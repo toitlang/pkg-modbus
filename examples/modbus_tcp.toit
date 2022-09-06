@@ -2,10 +2,13 @@
 // Use of this source code is governed by a Zero-Clause BSD license that can
 // be found in the EXAMPLES_LICENSE file.
 
+import log
 import net
 import modbus
 
 main:
+  log.set_default (log.default.with_level log.INFO_LEVEL)
+
   net := net.open
   socket := net.tcp_connect "localhost" 5502
 
@@ -20,7 +23,7 @@ main:
   holding_registers.write_many --address=103 [44]
 
   print
-    holding_registers.read_many --address=101 --register_count=3
+      holding_registers.read_many --address=101 --register_count=3
 
 
   // Some convenience functions:
@@ -38,7 +41,7 @@ main:
   uint32 := 42
   holding_registers.write_uint32 --address=300 uint32
   print
-    holding_registers.read_uint32 --address=300
+      holding_registers.read_uint32 --address=300
 
 
   input_registers := station.input_registers
