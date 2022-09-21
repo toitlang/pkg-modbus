@@ -132,7 +132,7 @@ class Modbus:
       frame := Frame --transaction_id=id --unit_id=unit_id --function_code=request.function_code --data=request.to_byte_array
       transactions_.write id frame
       response_frame/Frame? := null
-      if unit_id == Station.BROADCAST_UNIT_ID: return null
+      if is_broadcast: return null
       with_timeout --ms=READ_TIMEOUT_MS_:
         response_frame = transactions_.read id
       return deserialize_response.call response_frame
