@@ -51,10 +51,13 @@ class Station:
   input_registers_ /InputRegisters? := null
   holding_registers_ /HoldingRegisters? := null
 
+  is_broadcast/bool
+
   constructor.from_bus_
       .bus_
       .unit_id
-      --logger/log.Logger:
+      --logger/log.Logger
+      --.is_broadcast:
     logger_=logger
 
   /** Whether the underlying bus is closed. */
@@ -83,9 +86,11 @@ class Station:
   This function is only available for serial Modbus devices, although it may also work on some Modbus TCP devices.
   */
   read_server_id -> ServerIdResponse:
+    if is_broadcast: throw "Can't read from broadcast station"
     logger_.debug "read_server_id" --tags={"unit_id": unit_id}
     request := ReportServerIdRequest
-    response := bus_.send_ request --unit_id=unit_id: ReportServerIdResponse.deserialize it
+    response := bus_.send_ request --unit_id=unit_id --is_broadcast=false:
+      ReportServerIdResponse.deserialize it
     server_response := response as ReportServerIdResponse
     return ServerIdResponse server_response.server_id server_response.on_off
 
@@ -114,6 +119,7 @@ abstract class RegisterReader:
   If the $register_count is equal to 0, does nothing. In that case the server is not contacted.
   */
   read_many --address/int --register_count/int -> List:
+    if station_.is_broadcast: throw "Can't read from broadcast station"
     if not 0 <= address <= 0xFFFF: throw "OUT_OF_RANGE"
     if register_count == 0: return []
     if not 1 <= register_count <= 125: throw "OUT_OF_RANGE"
@@ -122,7 +128,7 @@ abstract class RegisterReader:
       --holding=is_holding_
       --address=address
       --register_count=register_count
-    response := station_.bus_.send_ request --unit_id=station_.unit_id:
+    response := station_.bus_.send_ request --unit_id=station_.unit_id --is_broadcast=false:
       ReadRegistersResponse.deserialize it --holding=is_holding_
     return (response as ReadRegistersResponse).registers
 
@@ -137,13 +143,14 @@ abstract class RegisterReader:
   This is a convenience function using $read_many.
   */
   read_single --address/int -> int:
+    if station_.is_broadcast: throw "Can't read from broadcast station"
     if not 0 <= address <= 0xFFFF: throw "OUT_OF_RANGE"
     station_.logger_.debug "$(is_holding_ ? "holding" : "input")_registers.read_single" --tags={"address": address}
     request := ReadRegistersRequest
       --holding=is_holding_
       --address=address
       --register_count=1
-    response := station_.bus_.send_ request --unit_id=station_.unit_id:
+    response := station_.bus_.send_ request --unit_id=station_.unit_id --is_broadcast=false:
       ReadRegistersResponse.deserialize it --holding=is_holding_
     return (response as ReadRegistersResponse).registers[0]
 
@@ -251,8 +258,8 @@ class HoldingRegisters extends RegisterReader:
       --address=address
       --registers=registers
     // In theory we don't need to deserialize the response, but this introduces some error checking.
-    station_.bus_.send_ request --unit_id=station_.unit_id:
-      WriteHoldingRegistersResponse.deserialize it
+    station_.bus_.send_ request --unit_id=station_.unit_id --is_broadcast=station_.is_broadcast:
+      it and WriteHoldingRegistersResponse.deserialize it
 
   /**
   Writes the given $value to a single holding register at the given $address.
@@ -282,13 +289,15 @@ class HoldingRegisters extends RegisterReader:
         --address=address
         --and_mask=~mask
         --or_mask=(value & mask)  // The '&' should not be necessary. See above.
-      station_.bus_.send_ request --unit_id=station_.unit_id: MaskWriteRegisterResponse.deserialize it
+      station_.bus_.send_ request --unit_id=station_.unit_id --is_broadcast=station_.is_broadcast:
+        it and MaskWriteRegisterResponse.deserialize it
     else:
       station_.logger_.debug "write_single" --tags={"address": address, "value": value}
       request := WriteSingleRegisterRequest
         --address=address
         --value=value
-      station_.bus_.send_ request --unit_id=station_.unit_id: WriteSingleRegisterResponse.deserialize it
+      station_.bus_.send_ request --unit_id=station_.unit_id --is_broadcast=station_.is_broadcast:
+        it and WriteSingleRegisterResponse.deserialize it
 
   /**
   Combines a write operation with a read operation.
@@ -301,6 +310,7 @@ class HoldingRegisters extends RegisterReader:
   Otherwise, if the $write_values is empty, a simple read-operations is performed as if $read_many was called.
   */
   write_read --read_address/int --read_register_count/int --write_address --write_values/List -> List:
+    if station_.is_broadcast: throw "Can't read from broadcast station"
     if not 0 <= read_address <= 0xFFFF: throw "OUT_OF_RANGE"
     if not 0 <= write_address <= 0xFFFF: throw "OUT_OF_RANGE"
     if read_register_count == 0 and write_values == 0: return []
@@ -324,7 +334,7 @@ class HoldingRegisters extends RegisterReader:
       --write_registers=write_values
       --read_address=read_address
       --read_register_count=read_register_count
-    response := station_.bus_.send_ request --unit_id=station_.unit_id:
+    response := station_.bus_.send_ request --unit_id=station_.unit_id --is_broadcast=false:
       WriteReadMultipleRegistersResponse.deserialize it
     return (response as WriteReadMultipleRegistersResponse).registers
 
@@ -402,6 +412,7 @@ abstract class BitsReader:
     coil/discrete-input N, one must provide address (N - 1).
   */
   read_many --address/int --bit_count/int -> ByteArray:
+    if station_.is_broadcast: throw "Can't read from broadcast station"
     if not 0 <= address <= 0xFFFF: throw "OUT_OF_RANGE"
     if bit_count == 0: return #[]
     if not 1 <= bit_count <= 2000: throw "OUT_OF_RANGE"
@@ -412,7 +423,7 @@ abstract class BitsReader:
       --is_coils=is_coils_
       --address=address
       --bit_count=bit_count
-    response := station_.bus_.send_ request --unit_id=station_.unit_id:
+    response := station_.bus_.send_ request --unit_id=station_.unit_id --is_broadcast=false:
       ReadBitsResponse.deserialize it --is_coils=is_coils_
     return (response as ReadBitsResponse).bits
 
@@ -425,6 +436,7 @@ abstract class BitsReader:
     coil/discrete-input N, one must provide address (N - 1).
   */
   read_single --address/int -> bool:
+    if station_.is_broadcast: throw "Can't read from broadcast station"
     if not 0 <= address <= 0xFFFF: throw "OUT_OF_RANGE"
 
     station_.logger_.debug "$(is_coils_ ? "coils" : "discrete inputs").read_single" --tags={"address": address}
@@ -432,7 +444,7 @@ abstract class BitsReader:
       --is_coils=is_coils_
       --address=address
       --bit_count=1
-    response := station_.bus_.send_ request --unit_id=station_.unit_id:
+    response := station_.bus_.send_ request --unit_id=station_.unit_id --is_broadcast=false:
       ReadBitsResponse.deserialize it --is_coils=is_coils_
     return (response as ReadBitsResponse).bits[0] != 0
 
@@ -469,8 +481,8 @@ class Coils extends BitsReader:
       --address=address
       --values=values
       --count=count
-    station_.bus_.send_ request --unit_id=station_.unit_id:
-      WriteMultipleCoilsResponse.deserialize it
+    station_.bus_.send_ request --unit_id=station_.unit_id --is_broadcast=station_.is_broadcast:
+      it and WriteMultipleCoilsResponse.deserialize it
 
   /**
   Writes the given boolean $value to a single coil at the given $address.
@@ -481,5 +493,5 @@ class Coils extends BitsReader:
     request := WriteSingleCoilRequest
       --address=address
       --value=value
-    station_.bus_.send_ request --unit_id=station_.unit_id:
-      WriteSingleCoilResponse.deserialize it
+    station_.bus_.send_ request --unit_id=station_.unit_id --is_broadcast=station_.is_broadcast:
+      it and WriteSingleCoilResponse.deserialize it

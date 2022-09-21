@@ -111,16 +111,21 @@ class Modbus:
     "server address". For Modbus TCP, it should almost always be equal to $Station.IGNORED_UNIT_ID (the default).
     For Modbus RTU or Modbus ASCII, it needs to be set to the id of the server.
 
-  For Modbus RTU or Modbus ASCII, the id 0 is reserved for broadcast messages. This bus will never assume that
-    a message to a station with id 0 expects a response. This is true, even for Modbus TCP instantiations.
+  If the id is 0 (the $Station.BROADCAST_UNIT_ID), then the station is assumed to be used for broadcast
+    messages. In that case messages don't expect a response and "read" functions will fail. If
+    a station with id 0 should not be treated as a broadcast station, use the $is_broadcast flag to
+    override the behavior.
   */
-  station unit_id/int=Station.IGNORED_UNIT_ID --logger/log.Logger=logger_ -> Station:
-    return Station.from_bus_ this unit_id --logger=logger
+  station -> Station
+      unit_id/int=Station.IGNORED_UNIT_ID
+      --logger/log.Logger=logger_
+      --is_broadcast/bool=(unit_id == Station.BROADCAST_UNIT_ID):
+    return Station.from_bus_ this unit_id --logger=logger --is_broadcast=is_broadcast
 
   broadcast_station --logger/log.Logger -> Station:
-    return Station.from_bus_ this Station.BROADCAST_UNIT_ID --logger=logger
+    return Station.from_bus_ this Station.BROADCAST_UNIT_ID --logger=logger --is_broadcast
 
-  send_ --unit_id/int request/Request [deserialize_response] -> protocol.Response?:
+  send_ --unit_id/int request/Request [deserialize_response] --is_broadcast/bool -> protocol.Response?:
     if is_closed: throw "BUS_CLOSED"
     id := transactions_.enter
     try:
