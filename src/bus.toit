@@ -112,14 +112,14 @@ class Modbus:
     For Modbus RTU or Modbus ASCII, it needs to be set to the id of the server.
 
   If the id is 0 (the $Station.BROADCAST_UNIT_ID), then the station is assumed to be used for broadcast
-    messages. In that case messages don't expect a response and "read" functions will fail. If
-    a station with id 0 should not be treated as a broadcast station, use the $is_broadcast flag to
-    override the behavior.
+    messages. In that case messages don't expect a response and "read" functions will fail. Use the
+    $force_non_broadcast flag to use a station with id 0 as a regular station.
   */
   station -> Station
       unit_id/int=Station.IGNORED_UNIT_ID
       --logger/log.Logger=logger_
-      --is_broadcast/bool=(unit_id == Station.BROADCAST_UNIT_ID):
+      --force_non_broadcast/bool=false:
+    is_broadcast := unit_id == Station.BROADCAST_UNIT_ID and not force_non_broadcast
     return Station.from_bus_ this unit_id --logger=logger --is_broadcast=is_broadcast
 
   broadcast_station --logger/log.Logger -> Station:
