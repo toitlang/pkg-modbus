@@ -235,7 +235,7 @@ class TransactionManager_:
   Writes a frame for the transaction with the given $id.
   */
   write id/int frame/Frame -> none:
-    assert: frame.id == id
+    assert: frame.transaction_id == id
     transport_.write frame
 
   dispatch_ frame_or_exception -> bool:
