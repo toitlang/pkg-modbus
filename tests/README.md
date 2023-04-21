@@ -13,7 +13,7 @@ The safe choice is to consider them BSD as well.
 Install with
 
 ``` shell
-pip install -U 'pymodbus>=3.0.0.dev4' serial
+pip install -U 'pymodbus==3.0.0.dev4' serial
 ```
 
 Note: we can't currently open the serial port in Toit-desktop. The following instructions are thus not yet relevant.
