@@ -1,3 +1,5 @@
+name: modbus
+description: A Modbus Toit client.
 dependencies:
   rs485:
     url: github.com/toitware/toit-rs485
