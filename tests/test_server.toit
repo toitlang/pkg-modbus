@@ -21,8 +21,8 @@ start_server mode/string:
   fork_data := pipe.fork
       true  // use_path.
       pipe.PIPE_INHERITED  // stdin.
-      pipe.PIPE_CREATED  // stdout.
-      pipe.PIPE_CREATED  // stderr.
+      pipe.PIPE_INHERITED  // stdin.
+      pipe.PIPE_INHERITED  // stdin.
       "python"  // program.
       args
   return [
@@ -46,12 +46,14 @@ with_test_server --logger/log.Logger --mode/string [block]:
       logger.debug chunk.to_string.trim
       stdout_bytes += chunk
       full_str := stdout_bytes.to_string
+      print full_str
       if full_str.contains "About to start server":
         server_is_running.set true
   task::
     stderr /pipe.OpenPipe := server_fork_data[2]
     while chunk := stderr.read:
       logger.debug chunk.to_string.trim
+      print chunk.to_string_non_throwing
       stderr_bytes += chunk
 
   // Give the server a second to start.
