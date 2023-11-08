@@ -5,7 +5,7 @@
 import reader
 
 class Frame:
-  static NO_TRANSACTION_ID ::= -1
+  static NO-TRANSACTION-ID ::= -1
 
   /**
   The transaction id of the frame.
@@ -15,25 +15,25 @@ class Frame:
 
   In cases where no transaction ID is used, the value is ignored.
   */
-  transaction_id/int
+  transaction-id/int
 
   /**
   The unit id (aka "station address" or "server address").
   Can be 0 for broadcast, and 255 if it should be ignored (typically for Modbus TCP).
   */
-  unit_id/int
+  unit-id/int
 
   /**
   The function code of the transaction.
 
   See Modbus Application Protocol V1.1b3, Section 6.
   */
-  function_code/int
+  function-code/int
 
   /** The data. */
   data/ByteArray
 
-  constructor --.transaction_id --.unit_id --.function_code --.data:
+  constructor --.transaction-id --.unit-id --.function-code --.data:
 
 interface Framer:
   read reader/reader.BufferedReader -> Frame?

@@ -11,26 +11,26 @@ import modbus.exception as modbus
 import net
 
 import .common as common
-import .test_server
+import .test-server
 
 main args:
-  server_logger := (log.default.with_level log.INFO_LEVEL).with_name "server"
-  with_test_server --logger=server_logger --mode="tcp_rtu":
+  server-logger := (log.default.with-level log.INFO-LEVEL).with-name "server"
+  with-test-server --logger=server-logger --mode="tcp_rtu":
     test it
 
 test port/int:
   net := net.open
 
-  socket := net.tcp_connect "localhost" port
+  socket := net.tcp-connect "localhost" port
 
-  transport := modbus.TcpTransport socket --framer=(modbus.RtuFramer --baud_rate=9600)
+  transport := modbus.TcpTransport socket --framer=(modbus.RtuFramer --baud-rate=9600)
   bus := modbus.Modbus transport
 
   station := bus.station 1
-  common.test station --is_serial
+  common.test station --is-serial
 
-  bad_station := bus.station 3
-  expect_throw DEADLINE_EXCEEDED_ERROR:
-    bad_station.holding_registers.write_many --address=101 [1]
+  bad-station := bus.station 3
+  expect-throw DEADLINE-EXCEEDED-ERROR:
+    bad-station.holding-registers.write-many --address=101 [1]
 
   bus.close

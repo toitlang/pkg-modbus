@@ -5,34 +5,34 @@
 import .framer
 
 class ModbusException:
-  static CRC_MISMATCH ::= 0
-  static ILLEGAL_FUNCTION ::= 1
-  static ILLEGAL_DATA_ADDRESS ::= 2
-  static ILLEGAL_DATA_VALUE ::= 3
-  static SERVER_DEVICE_BUSY ::= 6
-  static UNKNOWN_MODBUS ::= 20
-  static MISSING_INFORMATION ::= 21
+  static CRC-MISMATCH ::= 0
+  static ILLEGAL-FUNCTION ::= 1
+  static ILLEGAL-DATA-ADDRESS ::= 2
+  static ILLEGAL-DATA-VALUE ::= 3
+  static SERVER-DEVICE-BUSY ::= 6
+  static UNKNOWN-MODBUS ::= 20
+  static MISSING-INFORMATION ::= 21
   static CORRUPTED ::= 99
 
   code/int
   message/string
-  transaction_id/int
+  transaction-id/int
   data/any
 
-  constructor.crc --.transaction_id --.message --frame_bytes/ByteArray:
-    code = CRC_MISMATCH
-    data = frame_bytes
+  constructor.crc --.transaction-id --.message --frame-bytes/ByteArray:
+    code = CRC-MISMATCH
+    data = frame-bytes
 
   constructor.corrupted --.message --frame/Frame:
-    transaction_id = frame.transaction_id
+    transaction-id = frame.transaction-id
     code = CORRUPTED
     data = frame
 
-  constructor.frame_error .code --.message --frame/Frame:
-    transaction_id = frame.transaction_id
+  constructor.frame-error .code --.message --frame/Frame:
+    transaction-id = frame.transaction-id
     data = frame
 
-  constructor.other .code --.transaction_id --.message --.data:
+  constructor.other .code --.transaction-id --.message --.data:
 
   stringify -> string:
     return "Invalid frame $message"

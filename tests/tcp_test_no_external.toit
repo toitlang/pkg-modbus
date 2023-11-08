@@ -7,21 +7,21 @@ import log
 import modbus
 import net
 
-import .test_server
+import .test-server
 import .common as common
 
 main args:
-  server_logger := (log.default.with_level log.INFO_LEVEL).with_name "server"
-  with_test_server --logger=server_logger --mode="tcp":
+  server-logger := (log.default.with-level log.INFO-LEVEL).with-name "server"
+  with-test-server --logger=server-logger --mode="tcp":
     test it
 
 test port/int:
   net := net.open
-  socket := net.tcp_connect "localhost" port
+  socket := net.tcp-connect "localhost" port
 
   bus := modbus.Modbus.tcp socket
 
-  station := bus.station modbus.Station.IGNORED_UNIT_ID
+  station := bus.station modbus.Station.IGNORED-UNIT-ID
   common.test station
 
   bus.close
