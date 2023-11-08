@@ -1,4 +1,8 @@
+name: modbus
+description: A Modbus Toit client.
+environment:
+  sdk: ^2.0.0-alpha.118
 dependencies:
   rs485:
     url: github.com/toitware/toit-rs485
-    version: ^1.0.1
+    version: ^1.2.0
