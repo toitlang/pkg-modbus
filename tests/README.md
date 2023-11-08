@@ -10,6 +10,8 @@ The safe choice is to consider them BSD as well.
 
 ## Installation
 
+pymodbus=3.0.0.dev4 requires the 'imp' module, which was removed with Python 3.12.
+
 Install with
 
 ``` shell

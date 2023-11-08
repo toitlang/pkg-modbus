@@ -21,8 +21,8 @@ start_server mode/string:
   fork_data := pipe.fork
       true  // use_path.
       pipe.PIPE_INHERITED  // stdin.
-      pipe.PIPE_INHERITED  // stdin.
-      pipe.PIPE_INHERITED  // stdin.
+      pipe.PIPE_CREATED    // stdout.
+      pipe.PIPE_CREATED    // stderr.
       "python"  // program.
       args
   return [
