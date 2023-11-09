@@ -25,7 +25,7 @@ It is up to station whether addresses of different types map to the same memory 
 # Usage
 Start by creating a bus. See $Modbus.constructor $Modbus.tcp, or $Modbus.rtu.
 Then get a handle to a station ($Modbus.station), where you can then select the object type you are interested
-  in: $Station.coils, $Station,discrete_inputs, $Station.input_registers, $Station.holding_registers.
+  in: $Station.coils, $Station,discrete_inputs, $Station.input-registers, $Station.holding-registers.
 
 # Example
 ```

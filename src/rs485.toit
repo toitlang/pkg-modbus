@@ -22,14 +22,14 @@ class Rs485Transport implements Transport:
   writer_/writer.Writer
 
   constructor .rs485_
-      --.framer=(RtuFramer --baud_rate=rs485_.baud_rate):
+      --.framer=(RtuFramer --baud-rate=rs485_.baud-rate):
     reader_ = reader.BufferedReader rs485_
     writer_ = writer.Writer rs485_
 
-  supports_parallel_sessions -> bool: return false
+  supports-parallel-sessions -> bool: return false
 
   write frame/Frame:
-    rs485_.do_transmission:
+    rs485_.do-transmission:
       framer.write frame writer_
 
   read -> Frame?:
@@ -44,30 +44,30 @@ A framer for remote-terminal units.
 */
 class RtuFramer implements Framer:
   // The interframe delay that should be respected.
-  inter_frame_delay_us/int
-  last_activity_us_/int := ?
-  inter_character_timeout_us_/int := ?
+  inter-frame-delay-us/int
+  last-activity-us_/int := ?
+  inter-character-timeout-us_/int := ?
 
-  constructor --baud_rate/int:
+  constructor --baud-rate/int:
     // The inter-frame delay must be at least a delay corresponding to 3.5 characters of transmision.
     // The spec recommends to just use 1.750ms for any baud rate higher than 19200bps.
-    if baud_rate > 19_200:
-      inter_frame_delay_us = 1750
-      inter_character_timeout_us_ = 750
+    if baud-rate > 19_200:
+      inter-frame-delay-us = 1750
+      inter-character-timeout-us_ = 750
     else:
       // A byte is sent with a start, stop and parity bit.
       // 3.5 * (8 + 3) = 38.5
       // For simplicity we round up to 40.
-      inter_frame_delay_us = 40 * 1_000_000 / baud_rate
+      inter-frame-delay-us = 40 * 1_000_000 / baud-rate
       // According to the spec the receiver should drop frames that have 1.5 char duration intervals between two
       // characters.
       // In other words we can assume that a packet has been fully received when we have a timeout of 1.5chars on
       // reading the serial port.
       // 1.5 * (8 + 3) = 16.5
       // We round up to 17.
-      inter_character_timeout_us_ = 17 * 1_000_000 / baud_rate
+      inter-character-timeout-us_ = 17 * 1_000_000 / baud-rate
 
-    last_activity_us_ = Time.monotonic_us
+    last-activity-us_ = Time.monotonic-us
 
   read reader/reader.BufferedReader -> Frame?:
     // RTU frames don't have any knowledge of how big they are.
@@ -76,31 +76,31 @@ class RtuFramer implements Framer:
     // Fortunately, modbus packets are tiny, so they are generally not fragmented.
     data := reader.read
     if data == null: return null
-    catch --unwind=(: it != DEADLINE_EXCEEDED_ERROR):
+    catch --unwind=(: it != DEADLINE-EXCEEDED-ERROR):
       closed := false
       while not closed:
-        with_timeout --us=inter_character_timeout_us_:
+        with-timeout --us=inter-character-timeout-us_:
           chunk := reader.read
           if chunk == null:
             closed = true
-    last_activity_us_ = Time.monotonic_us
+    last-activity-us_ = Time.monotonic-us
 
-    unit_id := data[0]
-    function_code := data[1]
-    frame_data := data[2..data.size - 2]
-    expected_crc := compute_crc_ data --to=(data.size - 2)
-    given_crc := data[data.size - 1] << 8 | data[data.size - 2]
-    if expected_crc != given_crc:
+    unit-id := data[0]
+    function-code := data[1]
+    frame-data := data[2..data.size - 2]
+    expected-crc := compute-crc_ data --to=(data.size - 2)
+    given-crc := data[data.size - 1] << 8 | data[data.size - 2]
+    if expected-crc != given-crc:
       exception := ModbusException.crc
-          --transaction_id=Frame.NO_TRANSACTION_ID
+          --transaction-id=Frame.NO-TRANSACTION-ID
           --message="CRC error"
-          --frame_bytes=data
+          --frame-bytes=data
       throw exception
 
-    transaction_id := Frame.NO_TRANSACTION_ID  // RTU does not have transaction identifiers.
-    return Frame --transaction_id=transaction_id --unit_id=unit_id --function_code=function_code --data=frame_data
+    transaction-id := Frame.NO-TRANSACTION-ID  // RTU does not have transaction identifiers.
+    return Frame --transaction-id=transaction-id --unit-id=unit-id --function-code=function-code --data=frame-data
 
-  compute_crc_ data/ByteArray --to/int -> int:
+  compute-crc_ data/ByteArray --to/int -> int:
     // Specification modbus over serial line, v1.02,
     // Appendix B.
     // 6.2.2
@@ -118,18 +118,18 @@ class RtuFramer implements Framer:
     // It is important to send all the data at once, since we must not have delays between characters.
     data := ByteArray (4 + frame.data.size)
     pos := 0
-    data[pos++] = frame.unit_id
-    data[pos++] = frame.function_code
+    data[pos++] = frame.unit-id
+    data[pos++] = frame.function-code
     data.replace pos frame.data
     pos += frame.data.size
-    crc := compute_crc_ data --to=pos
+    crc := compute-crc_ data --to=pos
     // Store in big-endian.
     data[pos++] = crc & 0xFF
     data[pos++] = crc >> 8
     assert: pos == data.size
 
-    now := Time.monotonic_us
-    if last_activity_us_ + inter_frame_delay_us < now:
-      sleep (Duration --us=(now - (last_activity_us_ + inter_frame_delay_us)))
+    now := Time.monotonic-us
+    if last-activity-us_ + inter-frame-delay-us < now:
+      sleep (Duration --us=(now - (last-activity-us_ + inter-frame-delay-us)))
     writer.write data
-    last_activity_us_ = Time.monotonic_us
+    last-activity-us_ = Time.monotonic-us

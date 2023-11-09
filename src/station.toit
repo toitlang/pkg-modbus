@@ -15,84 +15,84 @@ import .framer
 import .protocol
 import .protocol as protocol
 
-CLOSED_ERROR ::= "TRANSPORT_CLOSED"
-TRANSACTION_CLOSED_ERROR ::= "TRANSACTION_CLOSED_ERROR"
+CLOSED-ERROR ::= "TRANSPORT_CLOSED"
+TRANSACTION-CLOSED-ERROR ::= "TRANSACTION_CLOSED_ERROR"
 
 /**
-The response to $Station.read_server_id.
+The response to $Station.read-server-id.
 */
 class ServerIdResponse:
   /** Device specific data, identifying the server. */
   id/ByteArray
   /** Whether the device is on or off. */
-  is_on/bool
+  is-on/bool
 
-  constructor .id .is_on:
+  constructor .id .is-on:
 
   /** The $id converted to a string. */
-  id_string -> string: return id.to_string_non_throwing
+  id-string -> string: return id.to-string-non-throwing
 
   stringify -> string:
-    return "$id_string ($(is_on ? "on" : "off"))"
+    return "$id-string ($(is-on ? "on" : "off"))"
 
 /**
 A Modbus client to talk with a specific station (aka Modbus server).
 */
 class Station:
-  static BROADCAST_UNIT_ID ::= 0
-  static IGNORED_UNIT_ID ::= 255
+  static BROADCAST-UNIT-ID ::= 0
+  static IGNORED-UNIT-ID ::= 255
 
   bus_/Modbus
-  unit_id/int
+  unit-id/int
   logger_/log.Logger
 
-  discrete_inputs_ /DiscreteInputs? := null
+  discrete-inputs_ /DiscreteInputs? := null
   coils_ /Coils? := null
-  input_registers_ /InputRegisters? := null
-  holding_registers_ /HoldingRegisters? := null
+  input-registers_ /InputRegisters? := null
+  holding-registers_ /HoldingRegisters? := null
 
-  is_broadcast/bool
+  is-broadcast/bool
 
-  constructor.from_bus_
+  constructor.from-bus_
       .bus_
-      .unit_id
+      .unit-id
       --logger/log.Logger
-      --.is_broadcast:
+      --.is-broadcast:
     logger_=logger
 
   /** Whether the underlying bus is closed. */
-  is_bus_closed -> bool:
-    return bus_.is_closed
+  is-bus-closed -> bool:
+    return bus_.is-closed
 
-  discrete_inputs -> DiscreteInputs:
-    if not discrete_inputs_: discrete_inputs_ = DiscreteInputs.internal_ this
-    return discrete_inputs_
+  discrete-inputs -> DiscreteInputs:
+    if not discrete-inputs_: discrete-inputs_ = DiscreteInputs.internal_ this
+    return discrete-inputs_
 
   coils -> Coils:
     if not coils_: coils_ = Coils.internal_ this
     return coils_
 
-  input_registers -> InputRegisters:
-    if not input_registers_: input_registers_ = InputRegisters.internal_ this
-    return input_registers_
+  input-registers -> InputRegisters:
+    if not input-registers_: input-registers_ = InputRegisters.internal_ this
+    return input-registers_
 
-  holding_registers -> HoldingRegisters:
-    if not holding_registers_: holding_registers_ = HoldingRegisters.internal_ this
-    return holding_registers_
+  holding-registers -> HoldingRegisters:
+    if not holding-registers_: holding-registers_ = HoldingRegisters.internal_ this
+    return holding-registers_
 
   /**
   Reads the server identifaction.
 
   This function is only available for serial Modbus devices, although it may also work on some Modbus TCP devices.
   */
-  read_server_id -> ServerIdResponse:
-    if is_broadcast: throw "Can't read from broadcast station"
-    logger_.debug "read_server_id" --tags={"unit_id": unit_id}
+  read-server-id -> ServerIdResponse:
+    if is-broadcast: throw "Can't read from broadcast station"
+    logger_.debug "read_server_id" --tags={"unit_id": unit-id}
     request := ReportServerIdRequest
-    response := bus_.send_ request --unit_id=unit_id --is_broadcast=false:
+    response := bus_.send_ request --unit-id=unit-id --is-broadcast=false:
       ReportServerIdResponse.deserialize it
-    server_response := response as ReportServerIdResponse
-    return ServerIdResponse server_response.server_id server_response.on_off
+    server-response := response as ReportServerIdResponse
+    return ServerIdResponse server-response.server-id server-response.on-off
 
 /**
 A register reader for Modbus stations.
@@ -106,30 +106,30 @@ abstract class RegisterReader:
 
   constructor.internal_ .station_:
 
-  abstract is_holding_ -> bool
+  abstract is-holding_ -> bool
 
   /**
-  Reads $register_count registers starting at the given $address.
+  Reads $register-count registers starting at the given $address.
 
   Returns a list of 16-bit values.
 
   Note that Modbus maps address 0 to register 1. This means that, in order to read register N, one must
     provide address (N - 1).
 
-  If the $register_count is equal to 0, does nothing. In that case the server is not contacted.
+  If the $register-count is equal to 0, does nothing. In that case the server is not contacted.
   */
-  read_many --address/int --register_count/int -> List:
-    if station_.is_broadcast: throw "Can't read from broadcast station"
+  read-many --address/int --register-count/int -> List:
+    if station_.is-broadcast: throw "Can't read from broadcast station"
     if not 0 <= address <= 0xFFFF: throw "OUT_OF_RANGE"
-    if register_count == 0: return []
-    if not 1 <= register_count <= 125: throw "OUT_OF_RANGE"
-    station_.logger_.debug "$(is_holding_ ? "holding" : "input")_registers.read_many" --tags={"address": address, "register_count": register_count}
+    if register-count == 0: return []
+    if not 1 <= register-count <= 125: throw "OUT_OF_RANGE"
+    station_.logger_.debug "$(is-holding_ ? "holding" : "input")_registers.read_many" --tags={"address": address, "register_count": register-count}
     request := ReadRegistersRequest
-      --holding=is_holding_
+      --holding=is-holding_
       --address=address
-      --register_count=register_count
-    response := station_.bus_.send_ request --unit_id=station_.unit_id --is_broadcast=false:
-      ReadRegistersResponse.deserialize it --holding=is_holding_
+      --register-count=register-count
+    response := station_.bus_.send_ request --unit-id=station_.unit-id --is-broadcast=false:
+      ReadRegistersResponse.deserialize it --holding=is-holding_
     return (response as ReadRegistersResponse).registers
 
   /**
@@ -140,68 +140,68 @@ abstract class RegisterReader:
   Note that Modbus maps address 0 to register 1. This means that, in order to read register N, one must
     provide address (N - 1).
 
-  This is a convenience function using $read_many.
+  This is a convenience function using $read-many.
   */
-  read_single --address/int -> int:
-    if station_.is_broadcast: throw "Can't read from broadcast station"
+  read-single --address/int -> int:
+    if station_.is-broadcast: throw "Can't read from broadcast station"
     if not 0 <= address <= 0xFFFF: throw "OUT_OF_RANGE"
-    station_.logger_.debug "$(is_holding_ ? "holding" : "input")_registers.read_single" --tags={"address": address}
+    station_.logger_.debug "$(is-holding_ ? "holding" : "input")_registers.read_single" --tags={"address": address}
     request := ReadRegistersRequest
-      --holding=is_holding_
+      --holding=is-holding_
       --address=address
-      --register_count=1
-    response := station_.bus_.send_ request --unit_id=station_.unit_id --is_broadcast=false:
-      ReadRegistersResponse.deserialize it --holding=is_holding_
+      --register-count=1
+    response := station_.bus_.send_ request --unit-id=station_.unit-id --is-broadcast=false:
+      ReadRegistersResponse.deserialize it --holding=is-holding_
     return (response as ReadRegistersResponse).registers[0]
 
   /**
-  Reads $byte_count bytes starting at $address and returns the data as a $ByteArray.
+  Reads $byte-count bytes starting at $address and returns the data as a $ByteArray.
 
-  This is a convenience function using $read_many.
+  This is a convenience function using $read-many.
   */
-  read_byte_array --address/int --byte_count/int -> ByteArray:
-    register_count := (byte_count + 1) / 2
-    registers := read_many --address=address --register_count=register_count
-    bytes := ByteArray byte_count
-    (byte_count / 2).repeat: binary.BIG_ENDIAN.put_uint16 bytes it * 2 registers[it]
-    if byte_count % 2 == 1: bytes[bytes.size - 1] = registers.last >> 8
+  read-byte-array --address/int --byte-count/int -> ByteArray:
+    register-count := (byte-count + 1) / 2
+    registers := read-many --address=address --register-count=register-count
+    bytes := ByteArray byte-count
+    (byte-count / 2).repeat: binary.BIG-ENDIAN.put-uint16 bytes it * 2 registers[it]
+    if byte-count % 2 == 1: bytes[bytes.size - 1] = registers.last >> 8
     return bytes
 
   /**
-  Reads a $string of size $character_count bytes from the given $address.
+  Reads a $string of size $character-count bytes from the given $address.
 
-  This is a convenience function using $read_many.
+  This is a convenience function using $read-many.
   */
-  read_string --address/int --character_count/int -> string:
-    bytes := read_byte_array --address=address --byte_count=character_count
-    return bytes.to_string
+  read-string --address/int --character-count/int -> string:
+    bytes := read-byte-array --address=address --byte-count=character-count
+    return bytes.to-string
 
   /**
   Reads a 64-bit float from the given $address.
 
-  This is a convenience function using $read_many. It assumes that the registers are stored in big-endian order.
+  This is a convenience function using $read-many. It assumes that the registers are stored in big-endian order.
   */
-  read_float --address/int -> float:
-    bytes := read_byte_array --address=address --byte_count=8
-    return float.from_bits
-      binary.BIG_ENDIAN.int64 bytes 0
+  read-float --address/int -> float:
+    bytes := read-byte-array --address=address --byte-count=8
+    return float.from-bits
+      binary.BIG-ENDIAN.int64 bytes 0
 
   /**
   Reads a 32-bit float from the given $address.
 
-  This is a convenience function using $read_many. It assumes that the registers are stored in big-endian order.
+  This is a convenience function using $read-many. It assumes that the registers are stored in big-endian order.
   */
-  read_float32 --address/int -> float:
-    return float.from_bits32
-      read_uint32 --address=address
+  read-float32 --address/int -> float:
+    return float.from-bits32
+      read-uint32 --address=address
 
   /**
   Reads a signed 16-bit int from the given $address.
 
-  This is a convenience function using $read_many.
+  This is a convenience function using $read-many.
   */
-  read_int16 --address/int -> int:
-    registers := read_many --address=address --register_count=1
+  read-int16 --address/int -> int:
+    registers := read-many --address=address --register-count=1
     result := registers[0]
     if 0x8000 & result == 0: return result
     return result - 0x10000
@@ -209,46 +209,46 @@ abstract class RegisterReader:
   /**
   Reads an unsigned 32-bit int from the given $address.
 
-  This is a convenience function using $read_many. It assumes that the registers are stored in big-endian order.
+  This is a convenience function using $read-many. It assumes that the registers are stored in big-endian order.
   */
-  read_uint32 --address/int -> int:
-    registers := read_many --address=address --register_count=2
+  read-uint32 --address/int -> int:
+    registers := read-many --address=address --register-count=2
     buffer := ByteArray 4
-    binary.BIG_ENDIAN.put_uint16 buffer 0 registers[0]
-    binary.BIG_ENDIAN.put_uint16 buffer 2 registers[1]
-    return binary.BIG_ENDIAN.uint32 buffer 0
+    binary.BIG-ENDIAN.put-uint16 buffer 0 registers[0]
+    binary.BIG-ENDIAN.put-uint16 buffer 2 registers[1]
+    return binary.BIG-ENDIAN.uint32 buffer 0
 
   /**
   Reads a signed 32-bit int from the given $address.
 
-  This is a convenience function using $read_many. It assumes that the registers are stored in big-endian order.
+  This is a convenience function using $read-many. It assumes that the registers are stored in big-endian order.
   */
-  read_int32 --address/int -> int:
-    registers := read_many --address=address --register_count=2
+  read-int32 --address/int -> int:
+    registers := read-many --address=address --register-count=2
     buffer := ByteArray 4
-    binary.BIG_ENDIAN.put_uint16 buffer 0 registers[0]
-    binary.BIG_ENDIAN.put_uint16 buffer 2 registers[1]
-    return binary.BIG_ENDIAN.int32 buffer 0
+    binary.BIG-ENDIAN.put-uint16 buffer 0 registers[0]
+    binary.BIG-ENDIAN.put-uint16 buffer 2 registers[1]
+    return binary.BIG-ENDIAN.int32 buffer 0
 
 class InputRegisters extends RegisterReader:
   constructor.internal_ station/Station:
     super.internal_ station
 
-  is_holding_ -> bool: return false
+  is-holding_ -> bool: return false
 
 class HoldingRegisters extends RegisterReader:
 
   constructor.internal_ station/Station:
     super.internal_ station
 
-  is_holding_ -> bool: return true
+  is-holding_ -> bool: return true
 
   /**
   Writes the $registers into the holding registers at the given $address.
 
   If the $registers list is empty, does nothing. In that case the server is not contacted.
   */
-  write_many --address/int registers/List:
+  write-many --address/int registers/List:
     if not 0 <= address <= 0xFFFF: throw "OUT_OF_RANGE"
     if registers.size == 0: return
     if not 1 <= registers.size <= 0x7D: throw "OUT_OF_RANGE"
@@ -258,7 +258,7 @@ class HoldingRegisters extends RegisterReader:
       --address=address
       --registers=registers
     // In theory we don't need to deserialize the response, but this introduces some error checking.
-    station_.bus_.send_ request --unit_id=station_.unit_id --is_broadcast=station_.is_broadcast:
+    station_.bus_.send_ request --unit-id=station_.unit-id --is-broadcast=station_.is-broadcast:
       it and WriteHoldingRegistersResponse.deserialize it
 
   /**
@@ -277,7 +277,7 @@ class HoldingRegisters extends RegisterReader:
   mask := ~and_mask
   ```
   */
-  write_single --address/int value/int --mask/int?=null:
+  write-single --address/int value/int --mask/int?=null:
     if not 0 <= address <= 0xFFFF: throw "OUT_OF_RANGE"
 
     if mask:
@@ -287,107 +287,107 @@ class HoldingRegisters extends RegisterReader:
       // As a work-around we bit-and the or-mask ourselves. It's cheap enough, so we can just do it all the time.
       request := MaskWriteRegisterRequest
         --address=address
-        --and_mask=~mask
-        --or_mask=(value & mask)  // The '&' should not be necessary. See above.
-      station_.bus_.send_ request --unit_id=station_.unit_id --is_broadcast=station_.is_broadcast:
+        --and-mask=~mask
+        --or-mask=(value & mask)  // The '&' should not be necessary. See above.
+      station_.bus_.send_ request --unit-id=station_.unit-id --is-broadcast=station_.is-broadcast:
         it and MaskWriteRegisterResponse.deserialize it
     else:
       station_.logger_.debug "write_single" --tags={"address": address, "value": value}
       request := WriteSingleRegisterRequest
         --address=address
         --value=value
-      station_.bus_.send_ request --unit_id=station_.unit_id --is_broadcast=station_.is_broadcast:
+      station_.bus_.send_ request --unit-id=station_.unit-id --is-broadcast=station_.is-broadcast:
         it and WriteSingleRegisterResponse.deserialize it
 
   /**
   Combines a write operation with a read operation.
 
-  Conceptually this operation is equivalent to doing a $write_many followed by a $read_many.
+  Conceptually this operation is equivalent to doing a $write-many followed by a $read-many.
 
-  If the $read_register_count is equal to 0, and the $write_values list is empty, does nothing.
+  If the $read-register-count is equal to 0, and the $write-values list is empty, does nothing.
     In that case the server is not contacted.
-  Otherwise, if the $read_register_count equals 0, a simple write-operations is performed as if $write_many was called.
-  Otherwise, if the $write_values is empty, a simple read-operations is performed as if $read_many was called.
+  Otherwise, if the $read-register-count equals 0, a simple write-operations is performed as if $write-many was called.
+  Otherwise, if the $write-values is empty, a simple read-operations is performed as if $read-many was called.
   */
-  write_read --read_address/int --read_register_count/int --write_address --write_values/List -> List:
-    if station_.is_broadcast: throw "Can't read from broadcast station"
-    if not 0 <= read_address <= 0xFFFF: throw "OUT_OF_RANGE"
-    if not 0 <= write_address <= 0xFFFF: throw "OUT_OF_RANGE"
-    if read_register_count == 0 and write_values == 0: return []
-    if read_register_count == 0:
-      write_many --address=write_address write_values
+  write-read --read-address/int --read-register-count/int --write-address --write-values/List -> List:
+    if station_.is-broadcast: throw "Can't read from broadcast station"
+    if not 0 <= read-address <= 0xFFFF: throw "OUT_OF_RANGE"
+    if not 0 <= write-address <= 0xFFFF: throw "OUT_OF_RANGE"
+    if read-register-count == 0 and write-values == 0: return []
+    if read-register-count == 0:
+      write-many --address=write-address write-values
       return []
-    if write_values.is_empty:
-      return read_many --address=read_address --register_count=read_register_count
+    if write-values.is-empty:
+      return read-many --address=read-address --register-count=read-register-count
 
-    if not 1 <= read_register_count <= 0x7D: throw "OUT_OF_RANGE"
-    if not 1 <= write_values.size <= 0x79: throw "OUT_OF_RANGE"
+    if not 1 <= read-register-count <= 0x7D: throw "OUT_OF_RANGE"
+    if not 1 <= write-values.size <= 0x79: throw "OUT_OF_RANGE"
 
     station_.logger_.debug "write_read_holding_registers" --tags={
-      "read-address": read_address,
-      "read-count": read_register_count,
-      "write-address": write_address,
-      "write-values": write_values,
+      "read-address": read-address,
+      "read-count": read-register-count,
+      "write-address": write-address,
+      "write-values": write-values,
     }
     request := WriteReadMultipleRegistersRequest
-      --write_address=write_address
-      --write_registers=write_values
-      --read_address=read_address
-      --read_register_count=read_register_count
-    response := station_.bus_.send_ request --unit_id=station_.unit_id --is_broadcast=false:
+      --write-address=write-address
+      --write-registers=write-values
+      --read-address=read-address
+      --read-register-count=read-register-count
+    response := station_.bus_.send_ request --unit-id=station_.unit-id --is-broadcast=false:
       WriteReadMultipleRegistersResponse.deserialize it
     return (response as WriteReadMultipleRegistersResponse).registers
 
   /**
   Writes $value at $address.
 
-  This is a convenience function using $write_many.
+  This is a convenience function using $write-many.
 
   Splits the $value byte-array inte 16-bit chunks (registers) and writes them to the station.
   */
-  write_byte_array --address/int value/ByteArray -> none:
+  write-byte-array --address/int value/ByteArray -> none:
     registers := List (value.size + 1) / 2
-    (value.size / 2).repeat: registers[it] = binary.BIG_ENDIAN.uint16 value it * 2
+    (value.size / 2).repeat: registers[it] = binary.BIG-ENDIAN.uint16 value it * 2
     if value.size % 2 == 1: registers[registers.size - 1] = value.last
-    write_many --address=address registers
+    write-many --address=address registers
 
   /**
   Writes the given string $str to the given $address.
 
-  This is a convenience function using $write_many.
+  This is a convenience function using $write-many.
   */
-  write_string --address/int str/string:
-    write_byte_array --address=address str.to_byte_array
+  write-string --address/int str/string:
+    write-byte-array --address=address str.to-byte-array
 
   /**
   Writes $value to the given $address.
 
-  This is a convenience function using $write_many.
+  This is a convenience function using $write-many.
   */
-  write_float32 --address/int value/float:
-    write_uint32 --address=address value.bits32
+  write-float32 --address/int value/float:
+    write-uint32 --address=address value.bits32
 
   /**
   Writes $value to the given $address.
 
-  This is a convenience function using $write_many.
+  This is a convenience function using $write-many.
   */
-  write_float --address/int value/float:
+  write-float --address/int value/float:
     buffer := ByteArray 8
-    binary.BIG_ENDIAN.put_float64 buffer 0 value
-    write_byte_array --address=address buffer
+    binary.BIG-ENDIAN.put-float64 buffer 0 value
+    write-byte-array --address=address buffer
 
 
   /**
   Writes $value to the given $address.
 
-  This is a convenience function using $write_many.
+  This is a convenience function using $write-many.
   */
-  write_uint32 --address/int value/int:
+  write-uint32 --address/int value/int:
     buffer := ByteArray 4
-    binary.BIG_ENDIAN.put_int32 buffer 0 value
-    registers := [binary.BIG_ENDIAN.uint16 buffer 0, binary.BIG_ENDIAN.uint16 buffer 2]
-    write_many --address=address registers
+    binary.BIG-ENDIAN.put-int32 buffer 0 value
+    registers := [binary.BIG-ENDIAN.uint16 buffer 0, binary.BIG-ENDIAN.uint16 buffer 2]
+    write-many --address=address registers
 
 /**
 A bits reader for Modbus stations.
@@ -399,53 +399,53 @@ abstract class BitsReader:
 
   constructor.internal_ .station_:
 
-  abstract is_coils_ -> bool
+  abstract is-coils_ -> bool
 
   /**
-  Reads $bit_count bits starting at the given $address.
+  Reads $bit-count bits starting at the given $address.
 
   Returns a byte-array of the read values. The least-significant bit corresponds to the coil/discrete-input at
-    $address, the next bit to $address + 1, and so on. If $bit_count is not a multiple of 8, then the
+    $address, the next bit to $address + 1, and so on. If $bit-count is not a multiple of 8, then the
     remaining bits in the last byte are padded with zeros.
 
   Note that Modbus maps address 0 to coil/discrete-input 1. This means that, in order to read
     coil/discrete-input N, one must provide address (N - 1).
   */
-  read_many --address/int --bit_count/int -> ByteArray:
-    if station_.is_broadcast: throw "Can't read from broadcast station"
+  read-many --address/int --bit-count/int -> ByteArray:
+    if station_.is-broadcast: throw "Can't read from broadcast station"
     if not 0 <= address <= 0xFFFF: throw "OUT_OF_RANGE"
-    if bit_count == 0: return #[]
-    if not 1 <= bit_count <= 2000: throw "OUT_OF_RANGE"
+    if bit-count == 0: return #[]
+    if not 1 <= bit-count <= 2000: throw "OUT_OF_RANGE"
 
-    station_.logger_.debug "$(is_coils_ ? "coils" : "discrete inputs").read_many"
-        --tags={"address": address, "bit_count": bit_count}
+    station_.logger_.debug "$(is-coils_ ? "coils" : "discrete inputs").read_many"
+        --tags={"address": address, "bit_count": bit-count}
     request := ReadBitsRequest
-      --is_coils=is_coils_
+      --is-coils=is-coils_
       --address=address
-      --bit_count=bit_count
-    response := station_.bus_.send_ request --unit_id=station_.unit_id --is_broadcast=false:
-      ReadBitsResponse.deserialize it --is_coils=is_coils_
+      --bit-count=bit-count
+    response := station_.bus_.send_ request --unit-id=station_.unit-id --is-broadcast=false:
+      ReadBitsResponse.deserialize it --is-coils=is-coils_
     return (response as ReadBitsResponse).bits
 
   /**
   Reads a single bit from the given $address.
 
-  This is a convenience function using $read_many.
+  This is a convenience function using $read-many.
 
   Note that Modbus maps address 0 to coil/discrete-input 1. This means that, in order to read
     coil/discrete-input N, one must provide address (N - 1).
   */
-  read_single --address/int -> bool:
-    if station_.is_broadcast: throw "Can't read from broadcast station"
+  read-single --address/int -> bool:
+    if station_.is-broadcast: throw "Can't read from broadcast station"
     if not 0 <= address <= 0xFFFF: throw "OUT_OF_RANGE"
 
-    station_.logger_.debug "$(is_coils_ ? "coils" : "discrete inputs").read_single" --tags={"address": address}
+    station_.logger_.debug "$(is-coils_ ? "coils" : "discrete inputs").read_single" --tags={"address": address}
     request := ReadBitsRequest
-      --is_coils=is_coils_
+      --is-coils=is-coils_
       --address=address
-      --bit_count=1
-    response := station_.bus_.send_ request --unit_id=station_.unit_id --is_broadcast=false:
-      ReadBitsResponse.deserialize it --is_coils=is_coils_
+      --bit-count=1
+    response := station_.bus_.send_ request --unit-id=station_.unit-id --is-broadcast=false:
+      ReadBitsResponse.deserialize it --is-coils=is-coils_
     return (response as ReadBitsResponse).bits[0] != 0
 
 
@@ -453,14 +453,14 @@ class DiscreteInputs extends BitsReader:
   constructor.internal_ station/Station:
     super.internal_ station
 
-  is_coils_ -> bool: return false
+  is-coils_ -> bool: return false
 
 
 class Coils extends BitsReader:
   constructor.internal_ station/Station:
     super.internal_ station
 
-  is_coils_ -> bool: return true
+  is-coils_ -> bool: return true
 
   /**
   Writes the given $values to the coils at the given $address.
@@ -470,7 +470,7 @@ class Coils extends BitsReader:
 
   If count is equal to 0, does nothing. In that case the server is not contacted.
   */
-  write_many --address/int values/ByteArray --count=(values.size * 8):
+  write-many --address/int values/ByteArray --count=(values.size * 8):
     if not 0 <= address <= 0xFFFF: throw "OUT_OF_RANGE"
     if count == 0: return
     if not 1 <= count <= 0x7B0: throw "OUT_OF_RANGE"
@@ -481,17 +481,17 @@ class Coils extends BitsReader:
       --address=address
       --values=values
       --count=count
-    station_.bus_.send_ request --unit_id=station_.unit_id --is_broadcast=station_.is_broadcast:
+    station_.bus_.send_ request --unit-id=station_.unit-id --is-broadcast=station_.is-broadcast:
       it and WriteMultipleCoilsResponse.deserialize it
 
   /**
   Writes the given boolean $value to a single coil at the given $address.
   */
-  write_single --address/int value/bool:
+  write-single --address/int value/bool:
     if not 0 <= address <= 0xFFFF: throw "OUT_OF_RANGE"
     station_.logger_.debug "coils.write_single" --tags={"address": address, "value": value}
     request := WriteSingleCoilRequest
       --address=address
       --value=value
-    station_.bus_.send_ request --unit_id=station_.unit_id --is_broadcast=station_.is_broadcast:
+    station_.bus_.send_ request --unit-id=station_.unit-id --is-broadcast=station_.is-broadcast:
       it and WriteSingleCoilResponse.deserialize it

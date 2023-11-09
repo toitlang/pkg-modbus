@@ -7,59 +7,59 @@ import log
 import monitor
 import net
 
-SERVER_PYTHON_EXECUTABLE ::= "synchronous_server.py"
+SERVER-PYTHON-EXECUTABLE ::= "synchronous_server.py"
 
-start_server mode/string:
+start-server mode/string:
   port /string? := null
   if mode == "tcp" or mode == "tcp_rtu":
     port = pipe.backticks "python" "third_party/ephemeral-port-reserve/ephemeral_port_reserve.py"
     port = port.trim
   else:
     throw "UNIMPLEMENTED"
-  args := ["python", SERVER_PYTHON_EXECUTABLE, mode]
+  args := ["python", SERVER-PYTHON-EXECUTABLE, mode]
   if port: args.add port
-  fork_data := pipe.fork
+  fork-data := pipe.fork
       true  // use_path.
-      pipe.PIPE_INHERITED  // stdin.
-      pipe.PIPE_CREATED  // stdout.
-      pipe.PIPE_CREATED  // stderr.
+      pipe.PIPE-INHERITED  // stdin.
+      pipe.PIPE-CREATED  // stdout.
+      pipe.PIPE-CREATED  // stderr.
       "python"  // program.
       args
   return [
     int.parse port,
-    fork_data
+    fork-data
   ]
 
-with_test_server --logger/log.Logger --mode/string [block]:
-  server_data := start_server mode
-  port := server_data[0]
+with-test-server --logger/log.Logger --mode/string [block]:
+  server-data := start-server mode
+  port := server-data[0]
   logger.info "started modbus server on port $port"
 
-  server_fork_data := server_data[1]
+  server-fork-data := server-data[1]
 
-  server_is_running := monitor.Latch
-  stdout_bytes := #[]
-  stderr_bytes := #[]
+  server-is-running := monitor.Latch
+  stdout-bytes := #[]
+  stderr-bytes := #[]
   task::
-    stdout /pipe.OpenPipe := server_fork_data[1]
+    stdout /pipe.OpenPipe := server-fork-data[1]
     while chunk := stdout.read:
-      logger.debug chunk.to_string.trim
-      stdout_bytes += chunk
-      full_str := stdout_bytes.to_string
-      if full_str.contains "About to start server":
-        server_is_running.set true
+      logger.debug chunk.to-string.trim
+      stdout-bytes += chunk
+      full-str := stdout-bytes.to-string
+      if full-str.contains "About to start server":
+        server-is-running.set true
   task::
-    stderr /pipe.OpenPipe := server_fork_data[2]
+    stderr /pipe.OpenPipe := server-fork-data[2]
     while chunk := stderr.read:
-      logger.debug chunk.to_string.trim
-      stderr_bytes += chunk
+      logger.debug chunk.to-string.trim
+      stderr-bytes += chunk
 
   // Give the server a second to start.
   // If it didn't start we might be looking for the wrong line in its output.
   // There was a change between 1.6.9 and 2.0.14. Could be that there is
   // going to be another one.
-  with_timeout --ms=1_000:
-    server_is_running.get
+  with-timeout --ms=1_000:
+    server-is-running.get
 
   network := net.open
 
@@ -68,7 +68,7 @@ with_test_server --logger/log.Logger --mode/string [block]:
   for i := 0; i < 10; i++:
     socket := null
     exception := catch:
-      socket = network.tcp_connect "localhost" port
+      socket = network.tcp-connect "localhost" port
     if socket:
       socket.close
       break
@@ -76,11 +76,11 @@ with_test_server --logger/log.Logger --mode/string [block]:
 
   try:
     block.call port
-  finally: | is_exception _ |
-    pid := server_fork_data[3]
+  finally: | is-exception _ |
+    pid := server-fork-data[3]
     logger.info "killing modbus server"
     pipe.kill_ pid 15
-    pipe.wait_for pid
-    if is_exception:
-      print stdout_bytes.to_string
-      print stderr_bytes.to_string
+    pipe.wait-for pid
+    if is-exception:
+      print stdout-bytes.to-string
+      print stderr-bytes.to-string
