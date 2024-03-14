@@ -24,9 +24,9 @@ class TcpTransport implements Transport:
   supports-parallel-sessions -> bool: return true
 
   write frame/Frame:
-    socket_.set-no-delay false
+    socket_.no-delay = false
     framer.write frame writer_
-    socket_.set-no-delay true
+    socket_.no-delay = true
 
   read -> Frame?:
     return framer.read reader_
