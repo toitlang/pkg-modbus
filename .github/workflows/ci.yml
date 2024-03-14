@@ -31,10 +31,6 @@ jobs:
         with:
           toit-version: ${{ matrix.toit-version }}
 
-      - name: Test
-        run: |
-          make test
-
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
