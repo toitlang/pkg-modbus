@@ -2,7 +2,7 @@
 // Use of this source code is governed by an MIT-style license that can be
 // found in the LICENSE file.
 
-import binary
+import io
 
 import .exception
 import .framer
@@ -85,8 +85,8 @@ class ReadBitsRequest extends Request:
 
   to-byte-array -> ByteArray:
     data := ByteArray 4
-    binary.BIG-ENDIAN.put-uint16 data 0 address
-    binary.BIG-ENDIAN.put-uint16 data 2 bit-count
+    io.BIG-ENDIAN.put-uint16 data 0 address
+    io.BIG-ENDIAN.put-uint16 data 2 bit-count
     return data
 
 class ReadBitsResponse extends Response:
@@ -98,7 +98,7 @@ class ReadBitsResponse extends Response:
   constructor.deserialize frame/Frame --is-coils/bool:
     Response.check-frame_ (is-coils ? COILS-ID : DISCRETE-INPUTS-ID) frame
     Response.check-sized-data_ frame
-    byte-count := binary.BIG-ENDIAN.uint8 frame.data 0
+    byte-count := io.BIG-ENDIAN.uint8 frame.data 0
     bits = frame.data[1..].copy
 
 class WriteSingleCoilRequest extends Request:
@@ -111,8 +111,8 @@ class WriteSingleCoilRequest extends Request:
 
   to-byte-array -> ByteArray:
     data := ByteArray 4
-    binary.BIG-ENDIAN.put-uint16 data 0 address
-    binary.BIG-ENDIAN.put-uint16 data 2 (value ? 0xFF00 : 0)
+    io.BIG-ENDIAN.put-uint16 data 0 address
+    io.BIG-ENDIAN.put-uint16 data 2 (value ? 0xFF00 : 0)
     return data
 
 class WriteSingleCoilResponse extends Response:
@@ -124,8 +124,8 @@ class WriteSingleCoilResponse extends Response:
   constructor.deserialize frame/Frame:
     Response.check-frame_ ID frame
     Response.check-sized-data_ frame 4
-    address = binary.BIG-ENDIAN.uint16 frame.data 0
-    value = (binary.BIG-ENDIAN.uint16 frame.data 2) == 0xFF00
+    address = io.BIG-ENDIAN.uint16 frame.data 0
+    value = (io.BIG-ENDIAN.uint16 frame.data 2) == 0xFF00
 
 class WriteSingleRegisterRequest extends Request:
   static ID ::= 6
@@ -137,8 +137,8 @@ class WriteSingleRegisterRequest extends Request:
 
   to-byte-array -> ByteArray:
     data := ByteArray 4
-    binary.BIG-ENDIAN.put-uint16 data 0 address
-    binary.BIG-ENDIAN.put-uint16 data 2 value
+    io.BIG-ENDIAN.put-uint16 data 0 address
+    io.BIG-ENDIAN.put-uint16 data 2 value
     return data
 
 class WriteSingleRegisterResponse extends Response:
@@ -150,8 +150,8 @@ class WriteSingleRegisterResponse extends Response:
   constructor.deserialize frame/Frame:
     Response.check-frame_ ID frame
     Response.check-sized-data_ frame 4
-    address = binary.BIG-ENDIAN.uint16 frame.data 0
-    value = binary.BIG-ENDIAN.uint16 frame.data 2
+    address = io.BIG-ENDIAN.uint16 frame.data 0
+    value = io.BIG-ENDIAN.uint16 frame.data 2
 
 class WriteMultipleCoilsRequest extends Request:
   static ID ::= 15
@@ -165,8 +165,8 @@ class WriteMultipleCoilsRequest extends Request:
 
   to-byte-array -> ByteArray:
     data := ByteArray (5 + values.size)
-    binary.BIG-ENDIAN.put-uint16 data 0 address
-    binary.BIG-ENDIAN.put-uint16 data 2 count
+    io.BIG-ENDIAN.put-uint16 data 0 address
+    io.BIG-ENDIAN.put-uint16 data 2 count
     data[4] = values.size
     // Copy over all the values.
     data.replace 5 values
@@ -186,8 +186,8 @@ class WriteMultipleCoilsResponse extends Response:
   constructor.deserialize frame/Frame:
     Response.check-frame_ ID frame
     Response.check-sized-data_ frame 4
-    address = binary.BIG-ENDIAN.uint16 frame.data 0
-    count = binary.BIG-ENDIAN.uint16 frame.data 2
+    address = io.BIG-ENDIAN.uint16 frame.data 0
+    count = io.BIG-ENDIAN.uint16 frame.data 2
 
 class WriteHoldingRegistersRequest extends Request:
   static ID ::= 16
@@ -199,11 +199,11 @@ class WriteHoldingRegistersRequest extends Request:
 
   to-byte-array -> ByteArray:
     data := ByteArray 5 + registers.size * 2
-    binary.BIG-ENDIAN.put-uint16 data 0 address
-    binary.BIG-ENDIAN.put-uint16 data 2 registers.size
-    binary.BIG-ENDIAN.put-uint8 data 4 registers.size * 2
+    io.BIG-ENDIAN.put-uint16 data 0 address
+    io.BIG-ENDIAN.put-uint16 data 2 registers.size
+    io.BIG-ENDIAN.put-uint8 data 4 registers.size * 2
     registers.size.repeat:
-      binary.BIG-ENDIAN.put-uint16 data (5 + it * 2) registers[it]
+      io.BIG-ENDIAN.put-uint16 data (5 + it * 2) registers[it]
     return data
 
 class WriteHoldingRegistersResponse extends Response:
@@ -216,8 +216,8 @@ class WriteHoldingRegistersResponse extends Response:
     Response.check-frame_ ID frame
     Response.check-sized-data_ frame 4
 
-    first-address = binary.BIG-ENDIAN.uint16 frame.data 0
-    changes = binary.BIG-ENDIAN.uint16 frame.data 2
+    first-address = io.BIG-ENDIAN.uint16 frame.data 0
+    changes = io.BIG-ENDIAN.uint16 frame.data 2
 
 class ReadRegistersRequest extends Request:
   static HOLDING-ID ::= 3
@@ -230,8 +230,8 @@ class ReadRegistersRequest extends Request:
 
   to-byte-array -> ByteArray:
     data := ByteArray 4
-    binary.BIG-ENDIAN.put-uint16 data 0 address
-    binary.BIG-ENDIAN.put-uint16 data 2 register-count
+    io.BIG-ENDIAN.put-uint16 data 0 address
+    io.BIG-ENDIAN.put-uint16 data 2 register-count
     return data
 
 class ReadRegistersResponse extends Response:
@@ -243,9 +243,9 @@ class ReadRegistersResponse extends Response:
   constructor.deserialize frame/Frame --holding/bool:
     Response.check-frame_ (holding ? HOLDING-ID : INPUT-ID) frame
     Response.check-sized-data_ frame --count-must-be-even
-    byte-count := binary.BIG-ENDIAN.uint8 frame.data 0
+    byte-count := io.BIG-ENDIAN.uint8 frame.data 0
     registers = List (byte-count / 2):
-      binary.BIG-ENDIAN.uint16 frame.data (1 + 2 * it)
+      io.BIG-ENDIAN.uint16 frame.data (1 + 2 * it)
 
 class ReportServerIdRequest extends Request:
   static ID ::= 17
@@ -265,7 +265,7 @@ class ReportServerIdResponse extends Response:
   constructor.deserialize frame/Frame:
     Response.check-frame_ ID frame
     Response.check-sized-data_ frame
-    byte-count := binary.BIG-ENDIAN.uint8 frame.data 0
+    byte-count := io.BIG-ENDIAN.uint8 frame.data 0
     if byte-count == 0:
         exception := ModbusException.other
           ModbusException.MISSING-INFORMATION
@@ -287,9 +287,9 @@ class MaskWriteRegisterRequest extends Request:
 
   to-byte-array -> ByteArray:
     data := ByteArray 6
-    binary.BIG-ENDIAN.put-uint16 data 0 address
-    binary.BIG-ENDIAN.put-uint16 data 2 and-mask
-    binary.BIG-ENDIAN.put-uint16 data 4 or-mask
+    io.BIG-ENDIAN.put-uint16 data 0 address
+    io.BIG-ENDIAN.put-uint16 data 2 and-mask
+    io.BIG-ENDIAN.put-uint16 data 4 or-mask
     return data
 
 class MaskWriteRegisterResponse extends Response:
@@ -302,9 +302,9 @@ class MaskWriteRegisterResponse extends Response:
   constructor.deserialize frame/Frame:
     Response.check-frame_ ID frame
     Response.check-sized-data_ frame 6
-    address = binary.BIG-ENDIAN.uint16 frame.data 0
-    and-mask = binary.BIG-ENDIAN.uint16 frame.data 2
-    or-mask = binary.BIG-ENDIAN.uint16 frame.data 4
+    address = io.BIG-ENDIAN.uint16 frame.data 0
+    and-mask = io.BIG-ENDIAN.uint16 frame.data 2
+    or-mask = io.BIG-ENDIAN.uint16 frame.data 4
 
 class WriteReadMultipleRegistersRequest extends Request:
   static ID ::= 23
@@ -318,13 +318,13 @@ class WriteReadMultipleRegistersRequest extends Request:
 
   to-byte-array -> ByteArray:
     data := ByteArray (9 + write-registers.size * 2)
-    binary.BIG-ENDIAN.put-uint16 data 0 read-address
-    binary.BIG-ENDIAN.put-uint16 data 2 read-register-count
-    binary.BIG-ENDIAN.put-uint16 data 4 write-address
-    binary.BIG-ENDIAN.put-uint16 data 6 write-registers.size
-    binary.BIG-ENDIAN.put-uint8 data 8 write-registers.size * 2
+    io.BIG-ENDIAN.put-uint16 data 0 read-address
+    io.BIG-ENDIAN.put-uint16 data 2 read-register-count
+    io.BIG-ENDIAN.put-uint16 data 4 write-address
+    io.BIG-ENDIAN.put-uint16 data 6 write-registers.size
+    io.BIG-ENDIAN.put-uint8 data 8 write-registers.size * 2
     write-registers.size.repeat:
-      binary.BIG-ENDIAN.put-uint16 data (9 + it * 2) write-registers[it]
+      io.BIG-ENDIAN.put-uint16 data (9 + it * 2) write-registers[it]
     return data
 
 class WriteReadMultipleRegistersResponse extends Response:
@@ -335,6 +335,6 @@ class WriteReadMultipleRegistersResponse extends Response:
   constructor.deserialize frame/Frame:
     Response.check-frame_ ID frame
     Response.check-sized-data_ frame --count-must-be-even
-    byte-count := binary.BIG-ENDIAN.uint8 frame.data 0
+    byte-count := io.BIG-ENDIAN.uint8 frame.data 0
     registers = List (byte-count / 2):
-      binary.BIG-ENDIAN.uint16 frame.data (1 + 2 * it)
+      io.BIG-ENDIAN.uint16 frame.data (1 + 2 * it)
