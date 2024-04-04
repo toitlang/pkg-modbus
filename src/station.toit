@@ -2,7 +2,7 @@
 // Use of this source code is governed by an MIT-style license that can be
 // found in the LICENSE file.
 
-import binary
+import io
 import log
 import monitor
 import net.tcp
@@ -163,7 +163,7 @@ abstract class RegisterReader:
     register-count := (byte-count + 1) / 2
     registers := read-many --address=address --register-count=register-count
     bytes := ByteArray byte-count
-    (byte-count / 2).repeat: binary.BIG-ENDIAN.put-uint16 bytes it * 2 registers[it]
+    (byte-count / 2).repeat: io.BIG-ENDIAN.put-uint16 bytes it * 2 registers[it]
     if byte-count % 2 == 1: bytes[bytes.size - 1] = registers.last >> 8
     return bytes
 
@@ -184,7 +184,7 @@ abstract class RegisterReader:
   read-float --address/int -> float:
     bytes := read-byte-array --address=address --byte-count=8
     return float.from-bits
-      binary.BIG-ENDIAN.int64 bytes 0
+      io.BIG-ENDIAN.int64 bytes 0
 
   /**
   Reads a 32-bit float from the given $address.
@@ -214,9 +214,9 @@ abstract class RegisterReader:
   read-uint32 --address/int -> int:
     registers := read-many --address=address --register-count=2
     buffer := ByteArray 4
-    binary.BIG-ENDIAN.put-uint16 buffer 0 registers[0]
-    binary.BIG-ENDIAN.put-uint16 buffer 2 registers[1]
-    return binary.BIG-ENDIAN.uint32 buffer 0
+    io.BIG-ENDIAN.put-uint16 buffer 0 registers[0]
+    io.BIG-ENDIAN.put-uint16 buffer 2 registers[1]
+    return io.BIG-ENDIAN.uint32 buffer 0
 
   /**
   Reads a signed 32-bit int from the given $address.
@@ -226,9 +226,9 @@ abstract class RegisterReader:
   read-int32 --address/int -> int:
     registers := read-many --address=address --register-count=2
     buffer := ByteArray 4
-    binary.BIG-ENDIAN.put-uint16 buffer 0 registers[0]
-    binary.BIG-ENDIAN.put-uint16 buffer 2 registers[1]
-    return binary.BIG-ENDIAN.int32 buffer 0
+    io.BIG-ENDIAN.put-uint16 buffer 0 registers[0]
+    io.BIG-ENDIAN.put-uint16 buffer 2 registers[1]
+    return io.BIG-ENDIAN.int32 buffer 0
 
 class InputRegisters extends RegisterReader:
   constructor.internal_ station/Station:
@@ -347,7 +347,7 @@ class HoldingRegisters extends RegisterReader:
   */
   write-byte-array --address/int value/ByteArray -> none:
     registers := List (value.size + 1) / 2
-    (value.size / 2).repeat: registers[it] = binary.BIG-ENDIAN.uint16 value it * 2
+    (value.size / 2).repeat: registers[it] = io.BIG-ENDIAN.uint16 value it * 2
     if value.size % 2 == 1: registers[registers.size - 1] = value.last
     write-many --address=address registers
 
@@ -374,7 +374,7 @@ class HoldingRegisters extends RegisterReader:
   */
   write-float --address/int value/float:
     buffer := ByteArray 8
-    binary.BIG-ENDIAN.put-float64 buffer 0 value
+    io.BIG-ENDIAN.put-float64 buffer 0 value
     write-byte-array --address=address buffer
 
 
@@ -385,8 +385,8 @@ class HoldingRegisters extends RegisterReader:
   */
   write-uint32 --address/int value/int:
     buffer := ByteArray 4
-    binary.BIG-ENDIAN.put-int32 buffer 0 value
-    registers := [binary.BIG-ENDIAN.uint16 buffer 0, binary.BIG-ENDIAN.uint16 buffer 2]
+    io.BIG-ENDIAN.put-int32 buffer 0 value
+    registers := [io.BIG-ENDIAN.uint16 buffer 0, io.BIG-ENDIAN.uint16 buffer 2]
     write-many --address=address registers
 
 /**

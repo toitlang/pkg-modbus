@@ -2,7 +2,7 @@
 // Use of this source code is governed by an MIT-style license that can be
 // found in the LICENSE file.
 
-import reader
+import io
 
 class Frame:
   static NO-TRANSACTION-ID ::= -1
@@ -36,6 +36,6 @@ class Frame:
   constructor --.transaction-id --.unit-id --.function-code --.data:
 
 interface Framer:
-  read reader/reader.BufferedReader -> Frame?
+  read reader/io.Reader -> Frame?
   write frame/Frame writer
 

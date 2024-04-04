@@ -3,9 +3,8 @@
 // found in the LICENSE file.
 
 import binary
+import io
 import log
-import reader
-import writer
 import rs485
 import .exception
 import .framer
@@ -18,13 +17,13 @@ class Rs485Transport implements Transport:
   framer/Framer
 
   rs485_/rs485.Rs485
-  reader_/reader.BufferedReader
-  writer_/writer.Writer
+  reader_/io.Reader
+  writer_/io.Writer
 
   constructor .rs485_
       --.framer=(RtuFramer --baud-rate=rs485_.baud-rate):
-    reader_ = reader.BufferedReader rs485_
-    writer_ = writer.Writer rs485_
+    reader_ = rs485_.in
+    writer_ = rs485_.out
 
   supports-parallel-sessions -> bool: return false
 
@@ -69,7 +68,7 @@ class RtuFramer implements Framer:
 
     last-activity-us_ = Time.monotonic-us
 
-  read reader/reader.BufferedReader -> Frame?:
+  read reader/io.Reader -> Frame?:
     // RTU frames don't have any knowledge of how big they are.
     // Their size is determined by timing...
     //
