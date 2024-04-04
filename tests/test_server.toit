@@ -42,7 +42,8 @@ with-test-server --logger/log.Logger --mode/string [block]:
   stderr-bytes := #[]
   task::
     stdout /pipe.OpenPipe := server-fork-data[1]
-    while chunk := stdout.read:
+    reader := stdout.in
+    while chunk := reader.read:
       logger.debug chunk.to-string.trim
       stdout-bytes += chunk
       full-str := stdout-bytes.to-string
@@ -50,7 +51,8 @@ with-test-server --logger/log.Logger --mode/string [block]:
         server-is-running.set true
   task::
     stderr /pipe.OpenPipe := server-fork-data[2]
-    while chunk := stderr.read:
+    reader := stderr.in
+    while chunk := reader.read:
       logger.debug chunk.to-string.trim
       stderr-bytes += chunk
 

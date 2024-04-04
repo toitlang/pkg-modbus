@@ -5,4 +5,4 @@ environment:
 dependencies:
   rs485:
     url: github.com/toitware/toit-rs485
-    version: ^1.3.0
+    version: ^1.3.1
