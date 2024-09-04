@@ -74,6 +74,19 @@ class Response:
           --frame=frame
         throw exception
 
+class RawRequest extends Request:
+  payload/ByteArray
+  constructor function-code/int .payload:
+    super function-code
+  to-byte-array -> ByteArray:
+    return payload
+
+class RawResponse extends Response:
+  bits/ByteArray
+  constructor.deserialize frame/Frame function-code/int:
+    Response.check-frame_ function-code frame
+    bits = frame.data
+
 class ReadBitsRequest extends Request:
   static COILS-ID ::= 1
   static DISCRETE-INPUTS-ID ::= 2
