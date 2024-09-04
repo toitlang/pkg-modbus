@@ -81,7 +81,7 @@ class Station:
     return holding-registers_
 
   /**
-  Reads the server identifaction.
+  Reads the server identification.
 
   This function is only available for serial Modbus devices, although it may also work on some Modbus TCP devices.
   */
@@ -93,6 +93,21 @@ class Station:
       ReportServerIdResponse.deserialize it
     server-response := response as ReportServerIdResponse
     return ServerIdResponse server-response.server-id server-response.on-off
+
+  /**
+  Reads a raw byte response for a specific $function-code.
+
+  The request may optionally include a $payload of bytes and the
+    result is the raw, unframed bytes in the server response.
+  */
+  read-raw --function-code/int --payload/ByteArray=#[] -> ByteArray:
+    if is-broadcast: throw "Can't read from broadcast station"
+    logger_.debug "read-raw" --tags={"unit_id": unit-id, "function_code": function-code}
+    request := RawRequest function-code payload
+    response := bus_.send_ request --unit-id=unit-id --is-broadcast=false:
+      RawResponse.deserialize it function-code
+    raw-response := response as RawResponse
+    return raw-response.bits
 
 /**
 A register reader for Modbus stations.
