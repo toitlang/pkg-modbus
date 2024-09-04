@@ -60,7 +60,7 @@ with-test-server --logger/log.Logger --mode/string [block]:
   // If it didn't start we might be looking for the wrong line in its output.
   // There was a change between 1.6.9 and 2.0.14. Could be that there is
   // going to be another one.
-  with-timeout --ms=1_000:
+  with-timeout --ms=5_000:
     server-is-running.get
 
   network := net.open
