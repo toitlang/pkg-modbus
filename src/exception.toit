@@ -32,7 +32,11 @@ class ModbusException:
     transaction-id = frame.transaction-id
     data = frame
 
+  constructor.noise --.message --.data:
+    code = CORRUPTED
+    transaction-id = Frame.NO-TRANSACTION-ID
+
   constructor.other .code --.transaction-id --.message --.data:
 
   stringify -> string:
-    return "Invalid frame $message"
+    return "Invalid frame: $message"
