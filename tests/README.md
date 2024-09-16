@@ -10,6 +10,10 @@ The safe choice is to consider them BSD as well.
 
 ## Installation
 
+Use `requirements.txt` to install the Python dependencies.
+
+For reference:
+
 pymodbus=3.0.0.dev4 requires the 'imp' module, which was removed with Python 3.12.
 
 Install with
@@ -18,7 +22,8 @@ Install with
 pip install -U 'pymodbus==3.0.0.dev4' serial
 ```
 
-Note: we can't currently open the serial port in Toit-desktop. The following instructions are thus not yet relevant.
+Note: we currently don't test the UART version. The following
+instructions are thus not yet relevant.
 
 To test the serial rtu client, create a pipe as follows:
 ``` shell

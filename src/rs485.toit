@@ -84,6 +84,12 @@ class RtuFramer implements Framer:
             closed = true
     last-activity-us_ = Time.monotonic-us
 
+    if data.size < 4:
+      exception := ModbusException.noise
+          --message="too short"
+          --data=data
+      throw exception
+
     unit-id := data[0]
     function-code := data[1]
     frame-data := data[2..data.size - 2]
