@@ -40,7 +40,7 @@ with-test-server --logger/log.Logger --mode/string [block]:
   stdout-bytes := #[]
   stderr-bytes := #[]
   task::
-    stdout /pipe.Stream := server-process.stdout
+    stdout/pipe.Stream := server-process.stdout
     reader := stdout.in
     while chunk := reader.read:
       logger.debug chunk.to-string.trim
@@ -49,7 +49,7 @@ with-test-server --logger/log.Logger --mode/string [block]:
       if full-str.contains "About to start server":
         server-is-running.set true
   task::
-    stderr /pipe.Stream := server-process.stderr
+    stderr/pipe.Stream := server-process.stderr
     reader := stderr.in
     while chunk := reader.read:
       logger.debug chunk.to-string.trim
