@@ -18,16 +18,15 @@ start-server mode/string:
     throw "UNIMPLEMENTED"
   args := ["python", SERVER-PYTHON-EXECUTABLE, mode]
   if port: args.add port
-  fork-data := pipe.fork
-      true  // use_path.
-      pipe.PIPE-INHERITED  // stdin.
-      pipe.PIPE-CREATED  // stdout.
-      pipe.PIPE-CREATED  // stderr.
+  process := pipe.fork
+      --use-path
+      --create-stdout
+      --create-stderr
       "python"  // program.
       args
   return [
     int.parse port,
-    fork-data
+    process,
   ]
 
 with-test-server --logger/log.Logger --mode/string [block]:
@@ -35,13 +34,13 @@ with-test-server --logger/log.Logger --mode/string [block]:
   port := server-data[0]
   logger.info "started modbus server on port $port"
 
-  server-fork-data := server-data[1]
+  server-process/pipe.Process := server-data[1]
 
   server-is-running := monitor.Latch
   stdout-bytes := #[]
   stderr-bytes := #[]
   task::
-    stdout /pipe.OpenPipe := server-fork-data[1]
+    stdout/pipe.Stream := server-process.stdout
     reader := stdout.in
     while chunk := reader.read:
       logger.debug chunk.to-string.trim
@@ -50,7 +49,7 @@ with-test-server --logger/log.Logger --mode/string [block]:
       if full-str.contains "About to start server":
         server-is-running.set true
   task::
-    stderr /pipe.OpenPipe := server-fork-data[2]
+    stderr/pipe.Stream := server-process.stderr
     reader := stderr.in
     while chunk := reader.read:
       logger.debug chunk.to-string.trim
@@ -76,13 +75,15 @@ with-test-server --logger/log.Logger --mode/string [block]:
       break
     sleep --ms=(50 * i)
 
+  is-exception := true
   try:
     block.call port
-  finally: | is-exception _ |
-    pid := server-fork-data[3]
+    is-exception = false
+  finally:
+    pid := server-process.pid
     logger.info "killing modbus server"
     pipe.kill_ pid 15
-    pipe.wait-for pid
+    server-process.wait
     if is-exception:
       print stdout-bytes.to-string
       print stderr-bytes.to-string
