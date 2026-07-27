@@ -2,7 +2,6 @@
 // Use of this source code is governed by a Zero-Clause BSD license that can
 // be found in the EXAMPLES_LICENSE file.
 
-import gpio
 import log
 import modbus
 import rs485
@@ -10,20 +9,16 @@ import rs485
 RX ::= 17
 TX ::= 16
 RTS ::= 18
-BAUD_RATE ::= 9600
+BAUD-RATE ::= 9600
 
 main:
   log.set_default (log.default.with_level log.INFO_LEVEL)
 
-  pin_rx := gpio.Pin  RX
-  pin_tx := gpio.Pin  TX
-  pin_rts := gpio.Pin RTS
-
   rs485_bus := rs485.Rs485
-      --rx=pin_rx
-      --tx=pin_tx
-      --rts=pin_rts
-      --baud_rate=BAUD_RATE
+      --rx=RX
+      --tx=TX
+      --rts=RTS
+      --baud-rate=BAUD-RATE
 
   bus := modbus.Modbus.rtu rs485_bus
 
