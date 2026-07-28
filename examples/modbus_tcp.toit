@@ -7,53 +7,53 @@ import net
 import modbus
 
 main:
-  log.set_default (log.default.with_level log.INFO_LEVEL)
+  log.set-default (log.default.with-level log.INFO-LEVEL)
 
   net := net.open
-  socket := net.tcp_connect "localhost" 5502
+  socket := net.tcp-connect "localhost" 5502
 
   bus := modbus.Modbus.tcp socket
 
   station := bus.station 1
 
-  holding_registers := station.holding_registers
+  holding-registers := station.holding-registers
 
-  holding_registers.write_many --address=101 [42]
-  holding_registers.write_many --address=102 [2]
-  holding_registers.write_many --address=103 [44]
+  holding-registers.write-many --address=101 [42]
+  holding-registers.write-many --address=102 [2]
+  holding-registers.write-many --address=103 [44]
 
   print
-      holding_registers.read_many --address=101 --register_count=3
+      holding-registers.read-many --address=101 --register-count=3
 
 
   // Some convenience functions:
   str := "1234 Hello æøå"
-  holding_registers.write_string --address=300 str
+  holding-registers.write-string --address=300 str
   print
-      holding_registers.read_string --address=300 --character_count=str.size
+      holding-registers.read-string --address=300 --character-count=str.size
 
 
   float32 := 42.125
-  holding_registers.write_float32 --address=300 float32
+  holding-registers.write-float32 --address=300 float32
   print
-      holding_registers.read_float32 --address=300
+      holding-registers.read-float32 --address=300
 
   uint32 := 42
-  holding_registers.write_uint32 --address=300 uint32
+  holding-registers.write-uint32 --address=300 uint32
   print
-      holding_registers.read_uint32 --address=300
+      holding-registers.read-uint32 --address=300
 
 
-  input_registers := station.input_registers
+  input-registers := station.input-registers
   print
-      input_registers.read_many --address=101 --register_count=3
+      input-registers.read-many --address=101 --register-count=3
 
   coils := station.coils
-  bits := coils.read_many --address=100 --bit_count=15
+  bits := coils.read-many --address=100 --bit-count=15
   print bits
 
-  discrete_inputs := station.discrete_inputs
-  bits = discrete_inputs.read_many --address=100 --bit_count=15
+  discrete-inputs := station.discrete-inputs
+  bits = discrete-inputs.read-many --address=100 --bit-count=15
   print bits
 
   bus.close

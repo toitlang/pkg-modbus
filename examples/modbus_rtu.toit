@@ -12,28 +12,28 @@ RTS ::= 18
 BAUD-RATE ::= 9600
 
 main:
-  log.set_default (log.default.with_level log.INFO_LEVEL)
+  log.set-default (log.default.with-level log.INFO-LEVEL)
 
-  rs485_bus := rs485.Rs485
+  rs485-bus := rs485.Rs485
       --rx=RX
       --tx=TX
       --rts=RTS
       --baud-rate=BAUD-RATE
 
-  bus := modbus.Modbus.rtu rs485_bus
+  bus := modbus.Modbus.rtu rs485-bus
 
   station := bus.station 1
 
-  holding_registers := station.holding_registers
+  holding-registers := station.holding-registers
 
-  holding_registers.write_many --address=101 [42]
-  holding_registers.write_many --address=102 [2]
-  holding_registers.write_many --address=103 [44]
+  holding-registers.write-many --address=101 [42]
+  holding-registers.write-many --address=102 [2]
+  holding-registers.write-many --address=103 [44]
 
   print
-      holding_registers.read_many --address=101 --register_count=3
+      holding-registers.read-many --address=101 --register-count=3
 
   // See the TCP example for other modbus operations.
 
   bus.close
-  rs485_bus.close
+  rs485-bus.close
