@@ -34,12 +34,12 @@ import modbus
 
 main:
   net := net.open
-  socket := net.tcp_connect "localhost" 5502
+  socket := net.tcp-connect "localhost" 5502
 
   bus := modbus.Modbus.tcp socket
   station := bus.station 1
-  registers := station.holding_registers
+  registers := station.holding-registers
 
-  registers.write_many --address=101 [42]
+  registers.write-many --address=101 [42]
 ```
 */
