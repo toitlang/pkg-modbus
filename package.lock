@@ -1,9 +1,8 @@
-sdk: ^2.0.0-alpha.170
+sdk: ^2.0.0-alpha.196
 prefixes:
-  rs485: toit-rs485
+  rs485: github.com/toitware/toit-rs485-1
 packages:
-  toit-rs485:
+  github.com/toitware/toit-rs485-1:
+    hash: 90fdd6098568f38084a55f31f822b9afa5764f9d
     url: github.com/toitware/toit-rs485
-    name: rs485
-    version: 1.3.1
-    hash: d27ecefa1ee5acd6fdc23472712d046c5eca1693
+    version: 1.4.0
