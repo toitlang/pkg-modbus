@@ -19,3 +19,17 @@ interface Transport:
   read -> Frame?
 
   close -> none
+
+/**
+A transport that needs to prepare the line for each request and its response.
+
+For example, a transport on a multiplexed serial line can select its channel, or switch the UART settings,
+  and keep other users off the line until the response arrived.
+
+Only works with a `SynchronousModbus` bus.
+*/
+interface TransactionTransport extends Transport:
+  /**
+  Calls the given $block, which writes a request and reads its response.
+  */
+  do-transaction [block] -> none

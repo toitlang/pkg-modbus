@@ -23,8 +23,8 @@ Conceptually, when talking to a station, the client sends a request with an addr
 It is up to station whether addresses of different types map to the same memory location.
 
 # Usage
-Start by creating a bus. See $Modbus.constructor $Modbus.tcp, or $Modbus.rtu.
-Then get a handle to a station ($Modbus.station), where you can then select the object type you are interested
+Start by creating a bus. See $Modbus.constructor, $Modbus.tcp, $Modbus.rtu, or $SynchronousModbus.constructor.
+Then get a handle to a station ($ModbusBase.station), where you can then select the object type you are interested
   in: $Station.coils, $Station,discrete_inputs, $Station.input-registers, $Station.holding-registers.
 
 # Example

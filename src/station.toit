@@ -42,7 +42,7 @@ class Station:
   static BROADCAST-UNIT-ID ::= 0
   static IGNORED-UNIT-ID ::= 255
 
-  bus_/Modbus
+  bus_/ModbusBase
   unit-id/int
   logger_/log.Logger
 
