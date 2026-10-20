@@ -44,7 +44,7 @@ A framer for remote-terminal units.
 class RtuFramer implements Framer:
   // The interframe delay that should be respected.
   inter-frame-delay-us/int
-  last-activity-us_/int := ?
+  last-activity-us_/int := 0
   inter-character-timeout-us_/int := ?
 
   constructor --baud-rate/int:
@@ -66,7 +66,7 @@ class RtuFramer implements Framer:
       // We round up to 17.
       inter-character-timeout-us_ = 17 * 1_000_000 / baud-rate
 
-    last-activity-us_ = Time.monotonic-us
+    last-activity-us_ = now-us_
 
   read reader/io.Reader -> Frame?:
     // RTU frames don't have any knowledge of how big they are.
@@ -82,7 +82,7 @@ class RtuFramer implements Framer:
           chunk := reader.read
           if chunk == null:
             closed = true
-    last-activity-us_ = Time.monotonic-us
+    last-activity-us_ = now-us_
 
     if data.size < 4:
       exception := ModbusException.noise
@@ -133,8 +133,14 @@ class RtuFramer implements Framer:
     data[pos++] = crc >> 8
     assert: pos == data.size
 
-    now := Time.monotonic-us
-    if last-activity-us_ + inter-frame-delay-us < now:
-      sleep (Duration --us=(now - (last-activity-us_ + inter-frame-delay-us)))
+    // Wait out the rest of the inter-frame delay, if the line was active recently.
+    remaining-us := last-activity-us_ + inter-frame-delay-us - now-us_
+    if remaining-us > 0: sleep_ --us=remaining-us
     writer.write data
-    last-activity-us_ = Time.monotonic-us
+    last-activity-us_ = now-us_
+
+  sleep_ --us/int -> none:
+    sleep (Duration --us=us)
+
+  now-us_ -> int:
+    return Time.monotonic-us
