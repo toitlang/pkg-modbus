@@ -17,92 +17,31 @@ import .tcp
 import .rs485
 
 /**
-The Modbus bus.
+Shared functionality of the Modbus buses.
 
 Represents the physical line. Use $station to talk to servers on the bus.
+
+See $Modbus and $SynchronousModbus.
 */
-class Modbus:
-  static DEFAULT-MAX-CONCURRENT-TRANSACTIONS ::= 16
-  static READ-TIMEOUT-MS_ ::= 1_500
+abstract class ModbusBase:
+  static DEFAULT-TIMEOUT ::= Duration --ms=1_500
 
-  transactions_/TransactionManager_ ::= ?
   logger_/log.Logger
+  timeout_/Duration
 
-  /**
-  Creates a Modbus bus.
-
-  The $transport encapsulates the physical layer and the framing.
-  The $max-concurrent-transactions specifies how many transactions can be in progress at the same time. For
-    transports that don't support concurrent transactions (like RS-485), this parameter is ignored. If none
-    is provided, uses $DEFAULT-MAX-CONCURRENT-TRANSACTIONS.
-
-  The $auto-run parameter specifies whether the bus should start its read task automatically. This is the default,
-    and there are few reasons why users would want to change this. If the $auto-run is false, users need to call
-    $run explicitly.
-  */
-  constructor transport/Transport
-      --auto-run=true
-      --max-concurrent-transactions/int?=null
-      --logger/log.Logger=(log.default.with-name "modbus"):
-    if not transport.supports-parallel-sessions:
-      max-concurrent-transactions = 1
-    else if not max-concurrent-transactions:
-      max-concurrent-transactions = DEFAULT-MAX-CONCURRENT-TRANSACTIONS
+  constructor --logger/log.Logger --timeout/Duration:
     logger_ = logger
-    transactions_ = TransactionManager_ transport
-        --logger=logger
-        --max-concurrent-transactions=max-concurrent-transactions
-        --auto-run=auto-run
-
-  /**
-  Variant of $Modbus.constructor.
-  Convenience constructor for creating a new TCP Modbus Client.
-  */
-  constructor.tcp socket/tcp.Socket
-      --framer/Framer=TcpFramer
-      --max-concurrent-transactions/int?=null
-      --auto-run=true:
-    return Modbus
-        TcpTransport socket --framer=framer
-        --auto-run=auto-run
-        --max-concurrent-transactions=max-concurrent-transactions
-
-  /**
-  Variant of $Modbus.constructor.
-  Convenience constructor for creating a new RTU Modbus Client.
-  */
-  constructor.rtu rs485-bus/rs485.Rs485
-      --framer/Framer=(RtuFramer --baud-rate=rs485-bus.baud-rate)
-      --auto-run=true:
-    return Modbus
-      Rs485Transport rs485-bus --framer=framer
-      --auto-run=auto-run
-
-  /**
-  Variant of $Modbus.constructor.
-  Convenience constructor for creating a new RTU Modbus Client.
-
-  Deprecated. Use the constructor without `--baud_rate` instead.
-  */
-  constructor.rtu rs485-bus/rs485.Rs485
-      --baud-rate/int
-      --framer/Framer=(RtuFramer --baud-rate=baud-rate)
-      --auto-run=true:
-    return Modbus
-      Rs485Transport rs485-bus --framer=framer
-      --auto-run=auto-run
+    timeout_ = timeout
 
   /** Whether this bus is closed. */
-  is-closed -> bool:
-    return transactions_.is-closed
+  abstract is-closed -> bool
 
   /**
   Closes the bus.
 
   May be called multiple times.
   */
-  close:
-    transactions_.close
+  abstract close -> none
 
   /**
   Creates a station object representing a device on the bus.
@@ -125,6 +64,100 @@ class Modbus:
   broadcast-station --logger/log.Logger -> Station:
     return Station.from-bus_ this Station.BROADCAST-UNIT-ID --logger=logger --is-broadcast
 
+  abstract send_ --unit-id/int request/Request [deserialize-response] --is-broadcast/bool -> protocol.Response?
+
+/**
+The Modbus bus.
+
+A read task processes incoming frames and pairs them with pending requests. Transports that support it
+  can have multiple requests in flight.
+*/
+class Modbus extends ModbusBase:
+  static DEFAULT-MAX-CONCURRENT-TRANSACTIONS ::= 16
+  static DEFAULT-TIMEOUT ::= ModbusBase.DEFAULT-TIMEOUT
+
+  transactions_/TransactionManager_ ::= ?
+
+  /**
+  Creates a Modbus bus.
+
+  The $transport encapsulates the physical layer and the framing.
+  The $max-concurrent-transactions specifies how many transactions can be in progress at the same time. For
+    transports that don't support concurrent transactions (like RS-485), this parameter is ignored. If none
+    is provided, uses $DEFAULT-MAX-CONCURRENT-TRANSACTIONS.
+
+  The $auto-run parameter specifies whether the bus should start its read task automatically. This is the default,
+    and there are few reasons why users would want to change this. If the $auto-run is false, users need to call
+    $run explicitly.
+
+  The $timeout is how long a request waits for its response.
+
+  A $TransactionTransport needs a $SynchronousModbus.
+  */
+  constructor transport/Transport
+      --auto-run=true
+      --max-concurrent-transactions/int?=null
+      --timeout/Duration=DEFAULT-TIMEOUT
+      --logger/log.Logger=(log.default.with-name "modbus"):
+    if transport is TransactionTransport: throw "INVALID_ARGUMENT"
+    if not transport.supports-parallel-sessions:
+      max-concurrent-transactions = 1
+    else if not max-concurrent-transactions:
+      max-concurrent-transactions = DEFAULT-MAX-CONCURRENT-TRANSACTIONS
+    transactions_ = TransactionManager_ transport
+        --logger=logger
+        --max-concurrent-transactions=max-concurrent-transactions
+        --auto-run=auto-run
+    super --logger=logger --timeout=timeout
+
+  /**
+  Variant of $Modbus.constructor.
+  Convenience constructor for creating a new TCP Modbus Client.
+  */
+  constructor.tcp socket/tcp.Socket
+      --framer/Framer=TcpFramer
+      --max-concurrent-transactions/int?=null
+      --auto-run=true
+      --timeout/Duration=DEFAULT-TIMEOUT:
+    return Modbus
+        TcpTransport socket --framer=framer
+        --auto-run=auto-run
+        --max-concurrent-transactions=max-concurrent-transactions
+        --timeout=timeout
+
+  /**
+  Variant of $Modbus.constructor.
+  Convenience constructor for creating a new RTU Modbus Client.
+  */
+  constructor.rtu rs485-bus/rs485.Rs485
+      --framer/Framer=(RtuFramer --baud-rate=rs485-bus.baud-rate)
+      --auto-run=true
+      --timeout/Duration=DEFAULT-TIMEOUT:
+    return Modbus
+      Rs485Transport rs485-bus --framer=framer
+      --auto-run=auto-run
+      --timeout=timeout
+
+  /**
+  Variant of $Modbus.constructor.
+  Convenience constructor for creating a new RTU Modbus Client.
+
+  Deprecated. Use the constructor without `--baud_rate` instead.
+  */
+  constructor.rtu rs485-bus/rs485.Rs485
+      --baud-rate/int
+      --framer/Framer=(RtuFramer --baud-rate=baud-rate)
+      --auto-run=true:
+    return Modbus
+      Rs485Transport rs485-bus --framer=framer
+      --auto-run=auto-run
+
+  is-closed -> bool:
+    return transactions_.is-closed
+
+  close -> none:
+    transactions_.close
+
   send_ --unit-id/int request/Request [deserialize-response] --is-broadcast/bool -> protocol.Response?:
     if is-closed: throw "BUS_CLOSED"
     id := transactions_.enter
@@ -133,7 +166,7 @@ class Modbus:
       transactions_.write id frame
       response-frame/Frame? := null
       if is-broadcast: return null
-      with-timeout --ms=READ-TIMEOUT-MS_:
+      with-timeout timeout_:
         response-frame = transactions_.read id
       return deserialize-response.call response-frame
     finally:
@@ -148,6 +181,67 @@ class Modbus:
   */
   run:
     transactions_.run
+
+/**
+A Modbus bus without a read task.
+
+Each request writes its frame and then reads the response in the caller's task, one request at a time.
+  Nothing reads from the transport between requests, so the transport can share its line with other
+  users. Mostly useful for transports that don't support parallel sessions (like RS-485).
+
+If the transport is a $TransactionTransport, then its $TransactionTransport.do-transaction is called
+  around each request and its response.
+*/
+class SynchronousModbus extends ModbusBase:
+  transport_/Transport
+  mutex_ ::= monitor.Mutex
+  next-transaction-id_/int := 0
+  is-closed_/bool := false
+
+  /**
+  Creates a synchronous Modbus bus.
+
+  The transport encapsulates the physical layer and the framing.
+  The $timeout is how long a request waits for its response.
+  */
+  constructor .transport_
+      --timeout/Duration=ModbusBase.DEFAULT-TIMEOUT
+      --logger/log.Logger=(log.default.with-name "modbus"):
+    super --logger=logger --timeout=timeout
+
+  is-closed -> bool:
+    return is-closed_
+
+  close -> none:
+    if is-closed_: return
+    is-closed_ = true
+    transport_.close
+
+  send_ --unit-id/int request/Request [deserialize-response] --is-broadcast/bool -> protocol.Response?:
+    mutex_.do:
+      if is-closed: throw "BUS_CLOSED"
+      id := next-transaction-id_++
+      frame := Frame --transaction-id=id --unit-id=unit-id --function-code=request.function-code --data=request.to-byte-array
+      response-frame/Frame? := null
+      exchange := :
+        transport_.write frame
+        if not is-broadcast:
+          with-timeout timeout_:
+            response-frame = read-response_ id
+      if transport_ is TransactionTransport:
+        (transport_ as TransactionTransport).do-transaction exchange
+      else:
+        exchange.call
+      if is-broadcast: return null
+      return deserialize-response.call response-frame
+    unreachable
+
+  read-response_ id/int -> Frame:
+    while true:
+      frame := transport_.read
+      if not frame: throw CLOSED-ERROR
+      if frame.transaction-id == Frame.NO-TRANSACTION-ID or frame.transaction-id == id: return frame
+      logger_.warn "unpaired response" --tags={"expected": id, "received": frame.transaction-id}
 
 /**
 A signal synchronization primitive.
